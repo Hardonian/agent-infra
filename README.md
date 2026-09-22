@@ -46,6 +46,19 @@ Each component has its own build system and documentation:
 
 See each component's `README.md` for detailed setup and usage instructions.
 
+
+## Related Repos
+
+### Platform Monorepos
+- [autopilot](https://github.com/Hardonian/autopilot) — ops, finops, growth, support
+- [agent-edge](https://github.com/Hardonian/agent-edge) — mesh-edge, pcap
+- [model-tools](https://github.com/Hardonian/model-tools) — model-forge, inference-api, ollama-router
+
+### Commercial
+- [hardonia-store](https://github.com/Hardonian/hardonia-store) — storefront
+- [comfyui-workflow-packs](https://github.com/Hardonian/comfyui-workflow-packs) — ComfyUI workflow products
+- [content-repo](https://github.com/Hardonian/content-repo) — blog posts and email sequences
+
 ## License
 
 Each component retains its original license. See individual `LICENSE` files for details.
