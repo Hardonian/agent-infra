@@ -1,0 +1,22 @@
+{
+  "mode": "oss",
+  "featureFlags": {
+    "cloud": {
+      "managedHosting": false,
+      "managedDatabase": false,
+      "dashboard": false,
+      "slaSupport": false,
+      "auditLogs": false,
+      "enterpriseSso": false,
+      "usageAnalytics": false,
+      "multiRegionFailover": false
+    }
+  },
+  "extensions": {
+    "runners": true,
+    "connectors": true,
+    "webhooks": true,
+    "marketplace": true,
+    "observabilityExporters": true
+  }
+}

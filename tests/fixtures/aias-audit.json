@@ -1,0 +1,12 @@
+{
+  "requestId": "cp-fixture-aias-001",
+  "timestamp": "2026-01-15T10:30:00.000Z",
+  "payload": {
+    "action": "audit",
+    "target": "aias",
+    "scenario": "compliance-check",
+    "policies": ["data-retention", "access-control", "encryption-at-rest"],
+    "resources": ["user-data", "api-keys", "runner-manifests"],
+    "notes": "Fixture for AI Audit Service connector testing"
+  }
+}

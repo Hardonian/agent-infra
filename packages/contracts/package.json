@@ -1,0 +1,66 @@
+{
+  "name": "@controlplane/contracts",
+  "version": "1.0.0",
+  "description": "Canonical contracts for ControlPlane ecosystem - Zod schemas, types, and error envelopes",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./errors": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./types": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./versioning": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "VERSIONING.md"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs && tsc --emitDeclarationOnly",
+    "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint --max-warnings=0 src --ext .ts",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^26.5.1",
+    "eslint": "^8.55.0",
+    "tsup": "^8.0.1",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Hardonian/ControlPlane.git",
+    "directory": "packages/contracts"
+  },
+  "keywords": [
+    "controlplane",
+    "contracts",
+    "schemas",
+    "zod",
+    "types"
+  ]
+}

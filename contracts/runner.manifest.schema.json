@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://controlplane.dev/contracts/runner.manifest.schema.json",
+  "title": "ControlPlane Runner Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "version", "description", "entrypoint"],
+  "properties": {
+    "name": { "type": "string", "minLength": 1 },
+    "version": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "entrypoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command", "args"],
+      "properties": {
+        "command": { "type": "string", "minLength": 1 },
+        "args": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "capabilities": { "type": "array", "items": { "type": "string" } },
+    "requiredEnv": { "type": "array", "items": { "type": "string" } },
+    "outputs": { "type": "array", "items": { "type": "string" } },
+    "docs": { "type": "string" }
+  }
+}

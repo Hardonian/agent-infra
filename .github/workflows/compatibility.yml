@@ -1,0 +1,117 @@
+name: Compatibility Check
+
+on:
+  pull_request:
+    branches: [main, next]
+  push:
+    branches: [main]
+  workflow_call:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  compatibility:
+    name: Version Compatibility
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@d882d12c64e032187b2edb46d3a0d003b7a43598 # v2.4.0
+        with:
+          version: 8.12.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm run build
+
+      - name: Check version compatibility
+        id: compat_check
+        run: |
+          node scripts/generate-compat-matrix.js --json --output=compat-report.json
+          node scripts/generate-compat-matrix.js --strict || echo "HAS_DRIFT=true" >> $GITHUB_ENV
+        continue-on-error: true
+
+      - name: Generate compatibility report
+        id: report
+        run: |
+          echo "## 📊 Compatibility Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Extract contract version
+          CONTRACT_VERSION=$(node -e "console.log(require('./packages/contracts/package.json').version)")
+          echo "**Contract Version**: ${CONTRACT_VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Show components
+          echo "### Components" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Version | Contract Range |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|---------|----------------|" >> $GITHUB_STEP_SUMMARY
+          
+          for pkg in packages/*/package.json; do
+            if [ -f "$pkg" ]; then
+              NAME=$(node -e "console.log(require('./$pkg').name)")
+              VERSION=$(node -e "console.log(require('./$pkg').version)")
+              CP_CONFIG=$(node -e "const cp=require('./$pkg').controlplane||{};console.log(cp.contractCompatibility?cp.contractCompatibility.min+' - '+cp.contractCompatibility.max:'1.0.0 - <2.0.0')")
+              echo "| ${NAME} | ${VERSION} | ${CP_CONFIG} |" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Root Package" >> $GITHUB_STEP_SUMMARY
+          ROOT_VERSION=$(node -e "console.log(require('./package.json').version)")
+          echo "| @controlplane/orchestrator | ${ROOT_VERSION} | ^${CONTRACT_VERSION} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@d790f6ac4d0a0020d5a85d6e9a1e9aef6a9e6a9 # v7.0.1
+        with:
+          script: |
+            const fs = require('fs');
+            const contractVersion = require('./packages/contracts/package.json').version;
+            
+            let body = `## 🔗 Contract Compatibility Check\n\n`;
+            body += `**Contract Version**: ${contractVersion}\n\n`;
+            
+            // Check for drift
+            const hasDrift = process.env.HAS_DRIFT === 'true';
+            if (hasDrift) {
+              body += `⚠️ **Version drift detected!** Some components may be incompatible with the current contract version.\n\n`;
+            } else {
+              body += `✅ All components compatible with contracts@${contractVersion}\n\n`;
+            }
+            
+            body += `Run \`pnpm run compat:check\` locally for details.\n\n`;
+            body += `---\n*This check is automated. See [Release Policy](./docs/RELEASE-POLICY.md) for details.*`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+      - name: Fail on version drift
+        if: env.HAS_DRIFT == 'true'
+        run: |
+          echo "❌ Version drift detected!"
+          echo "Some components have drifted beyond their declared contract compatibility ranges."
+          echo "Run 'pnpm run compat:check' locally to see details."
+          exit 1

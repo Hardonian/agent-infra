@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://controlplane.dev/contracts/events.schema.json",
+  "title": "ControlPlane Event Envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "source", "type", "timestamp", "version", "data"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "source": { "type": "string", "minLength": 1 },
+    "type": { "type": "string", "minLength": 1 },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "correlationId": { "type": "string" },
+    "context": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "runner": { "type": "string" },
+        "traceId": { "type": "string" },
+        "actor": { "type": "string" }
+      }
+    },
+    "data": { "type": "object", "additionalProperties": true }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://controlplane.dev/contracts/audit-trail.schema.json",
+  "title": "ControlPlane Audit Trail",
+  "description": "Schema for audit trail entries produced by runners performing compliance or policy checks",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "runner", "timestamp", "entries"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1, "description": "Unique audit trail identifier" },
+    "runner": { "type": "string", "minLength": 1, "description": "Runner that produced this audit trail" },
+    "timestamp": { "type": "string", "format": "date-time", "description": "When the audit was performed" },
+    "contractVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "scope": {
+      "type": "string",
+      "enum": ["full", "partial", "incremental"],
+      "description": "Whether this audit covers the full system, partial, or incremental changes"
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["entryId", "action", "actor", "timestamp", "resource"],
+        "properties": {
+          "entryId": { "type": "string", "minLength": 1 },
+          "action": { "type": "string", "enum": ["create", "read", "update", "delete", "evaluate", "approve", "reject"] },
+          "actor": { "type": "string", "minLength": 1, "description": "Who or what performed the action" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "resource": { "type": "string", "minLength": 1, "description": "What resource was acted upon" },
+          "outcome": { "type": "string", "enum": ["success", "failure", "denied", "skipped"] },
+          "details": { "type": "object", "additionalProperties": true },
+          "policyRef": { "type": "string", "description": "Reference to the policy or rule that governed this action" }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "totalEntries": { "type": "integer", "minimum": 0 },
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "skipped": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "correlationId": { "type": "string" },
+        "durationMs": { "type": "number", "minimum": 0 }
+      }
+    }
+  }
+}

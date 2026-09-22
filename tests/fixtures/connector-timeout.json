@@ -1,0 +1,11 @@
+{
+  "requestId": "cp-fixture-timeout-001",
+  "timestamp": "2026-01-01T00:00:00.000Z",
+  "payload": {
+    "action": "connector-test",
+    "target": "JobForge",
+    "scenario": "timeout",
+    "simulateTimeoutMs": 30000,
+    "notes": "Fixture for connector timeout testing"
+  }
+}

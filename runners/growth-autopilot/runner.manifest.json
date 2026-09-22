@@ -1,0 +1,22 @@
+{
+  "name": "growth-autopilot",
+  "version": "0.1.0",
+  "description": "ControlPlane adapter for growth-autopilot",
+  "entrypoint": {
+    "command": "node",
+    "args": [
+      "scripts/adapters/runner-adapter.mjs",
+      "--runner",
+      "growth-autopilot"
+    ]
+  },
+  "capabilities": [
+    "adapter",
+    "dry-run"
+  ],
+  "requiredEnv": [],
+  "outputs": [
+    "report"
+  ],
+  "docs": "docs/reality/EXECUTION_GRAPH.md"
+}

@@ -1,0 +1,66 @@
+name: "Feature request"
+description: "Suggest a new capability or improvement."
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for proposing an improvement! Please describe the value and the safest path to delivery.
+  - type: input
+    id: area
+    attributes:
+      label: Contribution lane
+      description: "Which area is affected? (docs / runner / connector / contracts / other)"
+      placeholder: "connector"
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      placeholder: "Add a connector template for ..."
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: "What pain are we solving?"
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: "What would you like to see? Include API changes if any."
+    validations:
+      required: true
+  - type: textarea
+    id: contract_impact
+    attributes:
+      label: Contract impact
+      description: |
+        Does this change affect existing contracts or schemas?
+        - Which schemas are affected?
+        - Is the change additive (new optional fields) or breaking (removing/narrowing fields)?
+        - Are existing consumers impacted?
+        - Does the compatibility matrix need updating?
+      placeholder: |
+        No contract impact — this is a tooling-only change.
+
+        OR
+
+        Adds optional `tags` field to reports.schema.json.
+        Additive change, no impact on existing consumers.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and impact
+      description: "Who benefits, and what might break?"
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: "How will we know this is done?"

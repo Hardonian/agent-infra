@@ -1,0 +1,350 @@
+name: CI
+
+on:
+  push:
+    branches: [main, next]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Contract validation - runs first and fast
+  contracts:
+    name: Contract Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@d882d12c64e032187b2edb46d3a0d003b7a43598 # v2.4.0
+        with:
+          version: 8.12.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build contracts
+        run: pnpm run build:contracts
+
+      - name: Build test kit
+        run: pnpm run build:test-kit
+
+      - name: Lint contracts
+        run: pnpm run contract:lint
+
+      - name: Run contract tests
+        run: pnpm run contract:validate:json
+
+      - name: Run contracts check
+        run: pnpm run contracts:check
+
+      - name: Run contract sync check
+        run: pnpm run contract:sync:check
+
+      - name: Generate capability registry
+        run: pnpm run capability:registry -- --format=json > capability-registry.json
+
+      - name: Upload capability registry artifact
+        uses: actions/upload-artifact@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          name: capability-registry
+          path: capability-registry.json
+
+      - name: Type check
+        run: pnpm run typecheck
+
+      - name: Generate compatibility matrix
+        run: pnpm run compat:generate
+
+      - name: Check version compatibility
+        run: pnpm run compat:check
+
+  # Lint and format checks
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@d882d12c64e032187b2edb46d3a0d003b7a43598 # v2.4.0
+        with:
+          version: 8.12.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Format check
+        run: pnpm run format:check
+
+  # Reality Map drift check
+  reality-map:
+    name: Reality Map Drift Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@d882d12c64e032187b2edb46d3a0d003b7a43598 # v2.4.0
+        with:
+          version: 8.12.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Secret scan
+        run: pnpm run secret-scan
+
+      - name: Dependency audit (high severity)
+        run: pnpm audit --prod --audit-level=high
+      - name: Run Reality Map drift check
+        run: pnpm run reality:check
+
+      - name: Show Reality Map
+        run: cat docs/REALITY_MAP.md | head -100
+
+  # Dependency audit
+  security:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@d882d12c64e032187b2edb46d3a0d003b7a43598 # v2.4.0
+        with:
+          version: 8.12.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run pnpm audit
+        run: pnpm audit --audit-level=high
+
+  # Semantic checks (commit conventions)
+  semantic:
+    name: Semantic Checks
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+
+      - name: Lint commits
+        uses: wagoid/commitlint-github-action@5a3f0e3e3c5ff2b47c86f0cf0ad1a9d90a4bb3e9 # v6.0.1
+
+  # Unit tests
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: [contracts]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@d882d12c64e032187b2edb46d3a0d003b7a43598 # v2.4.0
+        with:
+          version: 8.12.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Run tests
+        run: pnpm run test
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          name: unit-test-artifacts
+          path: |
+            test-results
+            playwright-report
+
+  e2e:
+    name: E2E Demo Tests
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@d882d12c64e032187b2edb46d3a0d003b7a43598 # v2.4.0
+        with:
+          version: 8.12.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Run demo E2E tests
+        run: pnpm run test:e2e:demo
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          name: playwright-report
+          path: playwright-report
+
+  # Contract drift guard
+  contract-guard:
+    name: Contract Guard
+    runs-on: ubuntu-latest
+    needs: [contracts]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@d882d12c64e032187b2edb46d3a0d003b7a43598 # v2.4.0
+        with:
+          version: 8.12.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run contract guard
+        run: node scripts/contract-guard.mjs --json
+
+  # Integration smoke test
+  smoke-test:
+    name: Integration Smoke Test
+    runs-on: ubuntu-latest
+    needs: [contracts, test]
+    steps:
+       - name: Checkout
+         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+       - name: Setup pnpm
+         uses: pnpm/action-setup@d882d12c64e032187b2edb46d3a0d003b7a43598 # v2.4.0
+         with:
+           version: 8.12.0
+
+       - name: Setup Node.js
+         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+         with:
+           node-version: '20'
+           cache: 'pnpm'
+
+       - name: Install dependencies
+         run: pnpm install --frozen-lockfile
+
+       - name: Build
+         run: pnpm run build
+
+       - name: Create golden fixture if missing
+         run: |
+           mkdir -p tests/fixtures
+           if [ ! -f tests/fixtures/golden-input.json ]; then
+             echo '{"requestId": "smoke-test-001", "timestamp": "2026-02-06T00:00:00.000Z", "payload": {"test": "data"}}' > tests/fixtures/golden-input.json
+           fi
+
+       - name: Run demo pipeline
+         run: pnpm controlplane run demo
+
+       - name: Upload smoke test artifacts
+         if: always()
+         uses: actions/upload-artifact@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+         with:
+           name: smoke-test-artifacts
+           path: artifacts/demo/
+
+   # Build verification
+  build:
+    name: Build (${{ matrix.distribution }})
+    runs-on: ubuntu-latest
+    needs: [contracts]
+    strategy:
+      fail-fast: false
+      matrix:
+        distribution: [oss, cloud]
+    env:
+      CONTROLPLANE_DISTRIBUTION: ${{ matrix.distribution }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@d882d12c64e032187b2edb46d3a0d003b7a43598 # v2.4.0
+        with:
+          version: 8.12.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify distribution config
+        run: pnpm run distribution:verify
+
+      - name: Build all packages
+        run: pnpm run build

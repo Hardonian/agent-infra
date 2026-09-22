@@ -1,0 +1,14 @@
+{
+  "requestId": "cp-fixture-aias-adversarial-001",
+  "timestamp": "2026-01-15T10:30:00.000Z",
+  "payload": {
+    "action": "audit",
+    "target": "aias",
+    "scenario": "adversarial-audit",
+    "policies": [],
+    "resources": [],
+    "emptyPayload": {},
+    "secretField_authorization": "Bearer should-not-appear-in-output",
+    "notes": "Adversarial fixture for AI Audit Service - empty policies, secrets"
+  }
+}

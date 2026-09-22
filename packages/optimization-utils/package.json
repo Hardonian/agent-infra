@@ -1,0 +1,54 @@
+{
+  "name": "@controlplane/optimization-utils",
+  "version": "1.0.0",
+  "description": "Frontend optimization and feature hardening utilities for ControlPlane",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./caching": {
+      "import": "./dist/caching/index.js",
+      "types": "./dist/caching/index.d.ts"
+    },
+    "./hardening": {
+      "import": "./dist/hardening/index.js",
+      "types": "./dist/hardening/index.d.ts"
+    },
+    "./monitoring": {
+      "import": "./dist/monitoring/index.js",
+      "types": "./dist/monitoring/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint --max-warnings=0 src/**/*.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@controlplane/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^26.5.1",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.0",
+    "eslint": "^8.55.0"
+  },
+  "peerDependencies": {
+    "zod": "^3.22.0"
+  },
+  "keywords": [
+    "controlplane",
+    "optimization",
+    "caching",
+    "hardening",
+    "performance"
+  ],
+  "license": "Apache-2.0"
+}

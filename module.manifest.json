@@ -1,0 +1,15 @@
+{
+  "name": "controlplane",
+  "version": "1.0.0",
+  "type": "composite",
+  "description": "ControlPlane System Orchestrator - coordinates TruthCore, JobForge, and module runners",
+  "contractVersion": "1.0.0",
+  "entrypoint": {
+    "command": "node",
+    "args": ["packages/controlplane/dist/cli.js"]
+  },
+  "capabilities": ["orchestration", "discovery", "validation", "plan", "run", "doctor"],
+  "requiredEnv": [],
+  "outputs": ["report", "evidence", "plan"],
+  "repository": "https://github.com/Hardonian/ControlPlane"
+}

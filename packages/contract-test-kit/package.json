@@ -1,0 +1,67 @@
+{
+  "name": "@controlplane/contract-test-kit",
+  "version": "1.0.0",
+  "description": "Contract validation toolkit for ControlPlane ecosystem - validates implementations against canonical schemas",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./cli": {
+      "types": "./dist/cli.d.ts",
+      "import": "./dist/cli.js"
+    }
+  },
+  "bin": {
+    "contract-test": "./dist/cli.js",
+    "contract-sync": "./dist/contract-sync.js",
+    "capability-registry": "./dist/registry-cli.js",
+    "marketplace": "./dist/marketplace-cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/cli.ts src/contract-sync.ts src/registry-cli.ts src/marketplace.ts src/marketplace-cli.ts --format esm,cjs --dts",
+    "dev": "tsup src/index.ts src/cli.ts --format esm,cjs --dts --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint --max-warnings=0 src --ext .ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@controlplane/contracts": "workspace:*",
+    "@controlplane/observability": "workspace:*",
+    "zod": "^4.5.4",
+    "chalk": "^6.0.0",
+    "glob": "^13.0.6"
+  },
+  "devDependencies": {
+    "@types/node": "^26.5.1",
+    "eslint": "^8.55.0",
+    "tsup": "^8.0.1",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Hardonian/ControlPlane.git",
+    "directory": "packages/contract-test-kit"
+  },
+  "keywords": [
+    "controlplane",
+    "contracts",
+    "testing",
+    "validation",
+    "schema"
+  ]
+}

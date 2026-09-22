@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://controlplane.dev/contracts/evidence.schema.json",
+  "title": "ControlPlane Evidence Packet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "runner", "timestamp", "hash", "items"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "runner": { "type": "string", "minLength": 1 },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "hash": { "type": "string", "minLength": 1, "description": "SHA-256 of canonical JSON of items array" },
+    "contractVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "value", "source"],
+        "properties": {
+          "key": { "type": "string", "minLength": 1 },
+          "value": {},
+          "source": { "type": "string", "minLength": 1 },
+          "redacted": { "type": "boolean", "default": false },
+          "hashValue": { "type": "string" }
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outcome", "reasons"],
+      "properties": {
+        "outcome": { "type": "string", "enum": ["pass", "fail", "uncertain", "skip"] },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["ruleId", "message"],
+            "properties": {
+              "ruleId": { "type": "string" },
+              "message": { "type": "string" },
+              "evidenceRefs": { "type": "array", "items": { "type": "string" } },
+              "uncertainty": { "type": "string" }
+            }
+          }
+        },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "durationMs": { "type": "number", "minimum": 0 },
+        "retryCount": { "type": "integer", "minimum": 0 },
+        "correlationId": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "requestId": "cp-fixture-ratelimit-001",
+  "timestamp": "2026-01-01T00:00:00.000Z",
+  "payload": {
+    "action": "connector-test",
+    "target": "JobForge",
+    "scenario": "rate-limit",
+    "simulateRetries": 3,
+    "simulateTimeoutMs": 5000,
+    "notes": "Fixture for connector rate-limit and retry testing"
+  }
+}

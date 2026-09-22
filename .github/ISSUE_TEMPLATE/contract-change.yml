@@ -1,0 +1,55 @@
+name: "Contract change proposal"
+description: "Propose a change to contracts or schemas."
+labels: ["contracts", "proposal"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Contract changes are intentionally strict. Please provide compatibility details so we can keep integrations safe.
+  - type: input
+    id: contract_area
+    attributes:
+      label: Contract area
+      description: "Which contract or schema is changing?"
+      placeholder: "registry, runner config, marketplace, error envelope"
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: "Describe the change."
+    validations:
+      required: true
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: "What problem does this solve?"
+    validations:
+      required: true
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility plan
+      description: "How is backward compatibility preserved? Include migration notes and versioning."
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation plan
+      description: "What tests or contract validation prove this is safe?"
+      placeholder: "pnpm run build:contracts && pnpm run contract:validate"
+    validations:
+      required: true
+  - type: textarea
+    id: downstream
+    attributes:
+      label: Downstream impact
+      description: "Which runners/connectors are affected?"
+  - type: textarea
+    id: rollout
+    attributes:
+      label: Rollout strategy
+      description: "How will this be deployed without breaking consumers?"

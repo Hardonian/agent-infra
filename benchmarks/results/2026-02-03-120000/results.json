@@ -1,0 +1,131 @@
+{
+  "timestamp": "2026-02-03T12:00:00.000Z",
+  "systemInfo": {
+    "nodeVersion": "v20.19.0",
+    "platform": "win32",
+    "arch": "x64",
+    "cpus": 16,
+    "totalMemory": "32GB",
+    "loadAverage": [0.12, 0.25, 0.18],
+    "uptime": 86400,
+    "timestamp": "2026-02-03T12:00:00.000Z",
+    "environment": {
+      "truthcoreUrl": "http://localhost:3001",
+      "jobforgeUrl": "http://localhost:3002",
+      "runnerUrl": "http://localhost:3003"
+    }
+  },
+  "results": [
+    {
+      "scenarioId": "latency-light",
+      "scenarioName": "Light Load - 10 Concurrent Jobs",
+      "iteration": 1,
+      "timestamp": "2026-02-03T12:01:15.234Z",
+      "durationMs": 2847,
+      "success": true,
+      "metrics": {
+        "totalJobs": 10,
+        "completedJobs": 10,
+        "failedJobs": 0,
+        "timeouts": 0,
+        "totalDurationMs": 2847,
+        "minLatencyMs": 245,
+        "maxLatencyMs": 312,
+        "avgLatencyMs": 278.5,
+        "p50LatencyMs": 280,
+        "p95LatencyMs": 310,
+        "p99LatencyMs": 312,
+        "throughputJobsPerSec": 3.51,
+        "errorRate": 0
+      }
+    },
+    {
+      "scenarioId": "latency-light",
+      "scenarioName": "Light Load - 10 Concurrent Jobs",
+      "iteration": 2,
+      "timestamp": "2026-02-03T12:01:48.567Z",
+      "durationMs": 2912,
+      "success": true,
+      "metrics": {
+        "totalJobs": 10,
+        "completedJobs": 10,
+        "failedJobs": 0,
+        "timeouts": 0,
+        "totalDurationMs": 2912,
+        "minLatencyMs": 252,
+        "maxLatencyMs": 325,
+        "avgLatencyMs": 289.3,
+        "p50LatencyMs": 285,
+        "p95LatencyMs": 320,
+        "p99LatencyMs": 325,
+        "throughputJobsPerSec": 3.43,
+        "errorRate": 0
+      }
+    },
+    {
+      "scenarioId": "latency-light",
+      "scenarioName": "Light Load - 10 Concurrent Jobs",
+      "iteration": 3,
+      "timestamp": "2026-02-03T12:02:22.890Z",
+      "durationMs": 2756,
+      "success": true,
+      "metrics": {
+        "totalJobs": 10,
+        "completedJobs": 10,
+        "failedJobs": 0,
+        "timeouts": 0,
+        "totalDurationMs": 2756,
+        "minLatencyMs": 238,
+        "maxLatencyMs": 298,
+        "avgLatencyMs": 265.8,
+        "p50LatencyMs": 268,
+        "p95LatencyMs": 295,
+        "p99LatencyMs": 298,
+        "throughputJobsPerSec": 3.63,
+        "errorRate": 0
+      }
+    },
+    {
+      "scenarioId": "scale-1-runner",
+      "scenarioName": "Baseline - Single Runner",
+      "iteration": 1,
+      "timestamp": "2026-02-03T12:05:33.123Z",
+      "durationMs": 15420,
+      "success": true,
+      "metrics": {
+        "runnerCount": 1,
+        "totalJobs": 50,
+        "completedJobs": 50,
+        "totalDurationMs": 15420,
+        "throughputJobsPerSec": 3.24,
+        "latencyP50": 2850,
+        "latencyP95": 4520,
+        "latencyP99": 5120,
+        "scalingEfficiency": 100,
+        "cpuUtilization": 12.5,
+        "memoryUtilization": 128.3
+      }
+    },
+    {
+      "scenarioId": "scale-3-runners",
+      "scenarioName": "Scale Out - 3 Runners",
+      "iteration": 1,
+      "timestamp": "2026-02-03T12:07:12.456Z",
+      "durationMs": 6820,
+      "success": true,
+      "metrics": {
+        "runnerCount": 3,
+        "totalJobs": 150,
+        "completedJobs": 150,
+        "totalDurationMs": 6820,
+        "throughputJobsPerSec": 8.21,
+        "latencyP50": 920,
+        "latencyP95": 1580,
+        "latencyP99": 1850,
+        "scalingEfficiency": 84.5,
+        "cpuUtilization": 35.2,
+        "memoryUtilization": 312.1
+      }
+    }
+  ]
+}

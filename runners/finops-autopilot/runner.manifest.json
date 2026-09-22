@@ -1,0 +1,22 @@
+{
+  "name": "finops-autopilot",
+  "version": "0.1.0",
+  "description": "ControlPlane adapter for finops-autopilot",
+  "entrypoint": {
+    "command": "node",
+    "args": [
+      "scripts/adapters/runner-adapter.mjs",
+      "--runner",
+      "finops-autopilot"
+    ]
+  },
+  "capabilities": [
+    "adapter",
+    "dry-run"
+  ],
+  "requiredEnv": [],
+  "outputs": [
+    "report"
+  ],
+  "docs": "docs/reality/EXECUTION_GRAPH.md"
+}

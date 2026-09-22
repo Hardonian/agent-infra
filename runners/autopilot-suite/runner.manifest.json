@@ -1,0 +1,22 @@
+{
+  "name": "autopilot-suite",
+  "version": "0.1.0",
+  "description": "ControlPlane adapter for autopilot-suite",
+  "entrypoint": {
+    "command": "node",
+    "args": [
+      "scripts/adapters/runner-adapter.mjs",
+      "--runner",
+      "autopilot-suite"
+    ]
+  },
+  "capabilities": [
+    "adapter",
+    "dry-run"
+  ],
+  "requiredEnv": [],
+  "outputs": [
+    "report"
+  ],
+  "docs": "docs/reality/EXECUTION_GRAPH.md"
+}

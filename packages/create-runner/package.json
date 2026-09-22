@@ -1,0 +1,59 @@
+{
+  "name": "@controlplane/create-runner",
+  "version": "1.0.0",
+  "description": "CLI tool to scaffold new ControlPlane runners in 15 minutes",
+  "type": "module",
+  "main": "./dist/cli.js",
+  "types": "./dist/cli.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/cli.d.ts",
+      "import": "./dist/cli.js"
+    }
+  },
+  "bin": {
+    "create-runner": "./bin/create-runner.js"
+  },
+  "files": [
+    "dist",
+    "templates",
+    "bin"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint --max-warnings=0 src --ext .ts",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "commander": "^15.0.0",
+    "inquirer": "^14.2.2",
+    "chalk": "^6.0.0",
+    "fs-extra": "^11.4.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/inquirer": "^9.0.7",
+    "@types/node": "^26.5.1",
+    "eslint": "^8.55.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Hardonian/ControlPlane.git",
+    "directory": "packages/create-runner"
+  },
+  "keywords": [
+    "controlplane",
+    "runner",
+    "scaffold",
+    "cli",
+    "generator"
+  ]
+}

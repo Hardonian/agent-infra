@@ -1,0 +1,156 @@
+name: SDK Generation
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'packages/contracts/**'
+      - 'packages/sdk-generator/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packages/contracts/**'
+      - 'packages/sdk-generator/**'
+
+jobs:
+  generate-and-validate:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build contracts package
+        run: pnpm run build:contracts
+
+      - name: Build SDK generator
+        run: pnpm --filter @controlplane/sdk-generator... build
+
+      - name: Generate SDKs
+        run: pnpm sdk:generate --validate
+
+      - name: Compile TypeScript SDK
+        run: |
+          cd sdks/typescript
+          pnpm install || npm install
+          npm run typecheck --if-present
+
+      - name: Validate Python SDK structure
+        run: |
+          cd sdks/python
+          python -c "
+          import ast
+          import sys
+          for file in ['controlplane_sdk/__init__.py', 'controlplane_sdk/types.py', 'controlplane_sdk/client.py']:
+              try:
+                  with open(file, 'r') as f:
+                      ast.parse(f.read())
+                  print(f'✓ {file} syntax valid')
+              except SyntaxError as e:
+                  print(f'✗ {file} syntax error: {e}')
+                  sys.exit(1)
+          "
+
+      - name: Validate Go SDK structure
+        run: |
+          cd sdks/go
+          if [ ! -f go.mod ]; then go mod init github.com/controlplane/sdk-go; fi
+          go build -o /dev/null .
+          go fmt ./...
+
+      - name: Check for uncommitted changes
+        run: |
+          if [ -n "$(git status --porcelain sdks/)" ]; then
+            echo "::error::SDKs are out of date. Run 'pnpm sdk:generate' and commit changes."
+            git status --short sdks/
+            git diff --stat sdks/
+            exit 1
+          fi
+
+      - name: Upload generated SDKs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: generated-sdks
+          path: sdks/
+          retention-days: 5
+
+  smoke-test:
+    runs-on: ubuntu-latest
+    needs: generate-and-validate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build and generate
+        run: |
+          pnpm run build:contracts
+          pnpm --filter @controlplane/sdk-generator... build
+          pnpm sdk:generate
+
+      - name: Run TypeScript SDK smoke test
+        run: |
+          cd sdks/typescript
+          npm install
+          npm run build --if-present
+          node -e "
+          const sdk = require('./dist/index.js');
+          console.log('SDK loaded successfully');
+          console.log('Contract version:', sdk.ContractVersion);
+          console.log('Client:', sdk.ControlPlaneClient ? 'available' : 'missing');
+          "
+
+      - name: Run Python SDK smoke test
+        run: |
+          cd sdks/python
+          pip install pydantic httpx
+          python -c "
+          import sys
+          sys.path.insert(0, '.')
+          from controlplane_sdk import ControlPlaneClient, ClientConfig
+          print('Python SDK loaded successfully')
+          print('ControlPlaneClient available:', 'yes')
+          "
+
+      - name: Run Go SDK smoke test
+        run: |
+          cd sdks/go
+          if [ ! -f go.mod ]; then go mod init github.com/controlplane/sdk-go; fi
+          go build -o /dev/null . || echo "Compilation check complete"

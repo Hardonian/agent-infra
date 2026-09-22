@@ -1,0 +1,162 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 0 * * 0' # Weekly on Sunday
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  # Security audit checklist - comprehensive security validation
+  security-audit:
+    name: Security Audit Checklist
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@d882d12c64e032187b2edb46d3a0d003b7a43598 # v2.4.0
+        with:
+          version: 8.12.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      # Check 1: Pinned GitHub Actions
+      - name: Check pinned actions
+        run: |
+          echo "🔒 Checking for pinned GitHub Actions..."
+          if grep -r "uses:.*@v[0-9]" .github/workflows/*.yml 2>/dev/null; then
+            echo "❌ Found unpinned actions (floating versions)"
+            exit 1
+          fi
+          if grep -r "uses:.*@main\|uses:.*@master" .github/workflows/*.yml 2>/dev/null; then
+            echo "❌ Found unpinned actions (main/master)"
+            exit 1
+          fi
+          echo "✅ All GitHub Actions are pinned"
+
+      # Check 2: Dependency scanning
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run pnpm audit
+        run: |
+          echo "🔍 Running dependency audit..."
+          pnpm audit --audit-level=high
+        continue-on-error: false
+
+      # Check 3: Secret scanning
+      - name: Check for hardcoded secrets
+        run: node scripts/secret-scan.js
+
+      # Check 4: Verify SECURITY.md exists
+      - name: Check SECURITY.md
+        run: |
+          echo "📄 Checking for SECURITY.md..."
+          if [ ! -f "SECURITY.md" ]; then
+            echo "❌ SECURITY.md not found"
+            exit 1
+          fi
+          echo "✅ SECURITY.md exists"
+
+      # Check 5: Verify threat model documentation
+      - name: Check threat model
+        run: |
+          echo "🛡️ Checking for threat model..."
+          if [ ! -f "docs/THREAT-MODEL.md" ]; then
+            echo "❌ docs/THREAT-MODEL.md not found"
+            exit 1
+          fi
+          echo "✅ Threat model documentation exists"
+
+      # Check 6: Container security baseline
+      - name: Check Dockerfile security
+        run: |
+          echo "🐳 Checking container security..."
+          if [ -f "Dockerfile" ]; then
+            if ! grep -q "USER " Dockerfile; then
+              echo "⚠️  Dockerfile should specify non-root USER"
+            fi
+            if grep -q ":latest" Dockerfile; then
+              echo "⚠️  Dockerfile uses :latest tag (should be pinned)"
+            fi
+          fi
+          echo "✅ Container security checks complete"
+
+      # Generate security report
+      - name: Generate security report
+        run: |
+          echo "## 🔒 Security Audit Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Checklist Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Pinned GitHub Actions | ✅ Pass |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dependency Audit | ✅ Pass |" >> $GITHUB_STEP_SUMMARY
+          echo "| Secret Scanning | ✅ Pass |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Documentation | ✅ Pass |" >> $GITHUB_STEP_SUMMARY
+          echo "| Threat Model | ✅ Pass |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Security Posture" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Contracts and tooling only (no runtime services in this repo)." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "See [SECURITY.md](./SECURITY.md) and [THREAT-MODEL.md](./docs/THREAT-MODEL.md) for details." >> $GITHUB_STEP_SUMMARY
+
+  codeql:
+    name: CodeQL Analysis (SAST)
+    runs-on: ubuntu-latest
+    needs: security-audit
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@cdcdbb579706841df617b3d9432aaf2a10fefbf1 # v2.22.9
+        with:
+          languages: javascript-typescript
+          queries: security-extended,security-and-quality
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@cdcdbb579706841df617b3d9432aaf2a10fefbf1 # v2.22.9
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@cdcdbb579706841df617b3d9432aaf2a10fefbf1 # v2.22.9
+        with:
+          category: "/language:javascript-typescript"
+
+  # New job: Security checklist summary for PRs
+  security-summary:
+    name: Security Summary
+    runs-on: ubuntu-latest
+    needs: [security-audit, codeql]
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Comment on PR
+        uses: actions/github-script@d790f6ac4d0a0020d5a85d6e9a1e9aef6a9e6a9 # v7.0.1
+        with:
+          script: |
+            const body = `## 🔒 Security Checklist Passed\n\nAll security gates have passed:\n\n- ✅ GitHub Actions pinned\n- ✅ Dependencies audited\n- ✅ Secret scanning passed\n- ✅ SAST (CodeQL) passed\n- ✅ Security documentation exists\n- ✅ Threat model documented\n\n**Note**: This repository ships contracts and tooling only. Runtime security controls belong to the consuming services.\n\nSee [SECURITY.md](./SECURITY.md) for details.`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });

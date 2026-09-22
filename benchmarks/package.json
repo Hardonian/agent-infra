@@ -1,0 +1,27 @@
+{
+  "name": "@controlplane/benchmarks",
+  "version": "1.0.0",
+  "description": "Performance benchmarks for ControlPlane orchestration system",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "benchmark": "npm run benchmark:all",
+    "benchmark:all": "tsx src/runner.ts --all",
+    "benchmark:latency": "tsx src/runner.ts --scenario=latency",
+    "benchmark:degraded": "tsx src/runner.ts --scenario=degraded",
+    "benchmark:scale": "tsx src/runner.ts --scenario=scale",
+    "benchmark:report": "tsx src/report.ts",
+    "analyze": "tsx src/analyze.ts",
+    "validate": "tsx src/validate.ts"
+  },
+  "dependencies": {
+    "@controlplane/contracts": "workspace:*",
+    "pino": "^8.17.0",
+    "pino-pretty": "^10.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}
