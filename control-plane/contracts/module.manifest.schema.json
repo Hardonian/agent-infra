@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://controlplane.dev/contracts/module.manifest.schema.json",
+  "title": "ControlPlane Module Manifest",
+  "description": "Standard manifest for sibling repo / module discovery",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "version", "type", "contractVersion"],
+  "properties": {
+    "name": { "type": "string", "minLength": 1 },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+" },
+    "type": { "type": "string", "enum": ["runner", "evaluator", "connector", "composite"] },
+    "description": { "type": "string" },
+    "contractVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "entrypoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command"],
+      "properties": {
+        "command": { "type": "string", "minLength": 1 },
+        "args": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "capabilities": { "type": "array", "items": { "type": "string" } },
+    "requiredEnv": { "type": "array", "items": { "type": "string" } },
+    "outputs": { "type": "array", "items": { "type": "string" } },
+    "healthCheck": { "type": "string" },
+    "repository": { "type": "string" }
+  }
+}

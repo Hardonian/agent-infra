@@ -1,0 +1,238 @@
+name: SDK Smoke Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  smoke-test-typescript:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build contracts
+        run: pnpm run build:contracts
+
+      - name: Build SDK generator
+        run: pnpm --filter @controlplane/sdk-generator... build
+
+      - name: Generate TypeScript SDK
+        run: pnpm sdk:generate --language typescript
+
+      - name: Install TypeScript SDK dependencies
+        working-directory: sdks/typescript
+        run: npm install
+
+      - name: Build TypeScript SDK
+        working-directory: sdks/typescript
+        run: npm run build
+
+      - name: Type check TypeScript SDK
+        working-directory: sdks/typescript
+        run: npm run typecheck
+
+      - name: Runtime smoke test
+        working-directory: sdks/typescript
+        run: |
+          node -e "
+          const sdk = require('./dist/index.js');
+          console.log('✓ SDK loaded successfully');
+          console.log('✓ ContractVersion schema:', typeof sdk.ContractVersionSchema);
+          console.log('✓ JobRequest schema:', typeof sdk.JobRequestSchema);
+          console.log('✓ ControlPlaneClient:', typeof sdk.ControlPlaneClient);
+          console.log('✓ validate function:', typeof sdk.validate);
+          console.log('✓ safeValidate function:', typeof sdk.safeValidate);
+          
+          // Test runtime validation
+          const { JobRequestSchema, safeValidate } = sdk;
+          const result = safeValidate(JobRequestSchema, {
+            id: '550e8400-e29b-41d4-a716-446655440000',
+            type: 'test-job',
+            priority: 50,
+            payload: { type: 'test', data: {} },
+            metadata: { source: 'test', createdAt: new Date().toISOString() },
+            retryPolicy: {},
+            timeoutMs: 30000
+          });
+          console.log('✓ Runtime validation works:', result.success ? 'PASS' : 'FAIL');
+          "
+
+  smoke-test-python:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build contracts
+        run: pnpm run build:contracts
+
+      - name: Build SDK generator
+        run: pnpm --filter @controlplane/sdk-generator... build
+
+      - name: Generate Python SDK
+        run: pnpm sdk:generate --language python
+
+      - name: Install Python SDK dependencies
+        working-directory: sdks/python
+        run: pip install pydantic httpx
+
+      - name: Python syntax check
+        working-directory: sdks/python
+        run: |
+          python -c "
+          import ast
+          import sys
+          files = ['controlplane_sdk/__init__.py', 'controlplane_sdk/models.py', 'controlplane_sdk/client.py']
+          for f in files:
+              with open(f, 'r') as file:
+                  try:
+                      ast.parse(file.read())
+                      print(f'✓ {f} syntax valid')
+                  except SyntaxError as e:
+                      print(f'✗ {f} syntax error: {e}')
+                      sys.exit(1)
+          "
+
+      - name: Runtime smoke test
+        working-directory: sdks/python
+        run: |
+          python -c "
+          import sys
+          sys.path.insert(0, '.')
+          from controlplane_sdk import ControlPlaneClient, ClientConfig, validate, JobRequest
+          print('✓ SDK imports work')
+          
+          # Test model creation
+          job = JobRequest(
+              id='550e8400-e29b-41d4-a716-446655440000',
+              type='test-job',
+              priority=50,
+              payload={'type': 'test', 'data': {}},
+              metadata={'source': 'test', 'createdAt': '2024-01-01T00:00:00Z'},
+              timeoutMs=30000
+          )
+          print('✓ Model instantiation works')
+          
+          # Test validation
+          result = validate(JobRequest, job.model_dump())
+          print('✓ Validation works')
+          
+          # Test client
+          client = ControlPlaneClient(ClientConfig(base_url='http://localhost:8080'))
+          print('✓ Client instantiation works')
+          "
+
+  smoke-test-go:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build contracts
+        run: pnpm run build:contracts
+
+      - name: Build SDK generator
+        run: pnpm --filter @controlplane/sdk-generator... build
+
+      - name: Generate Go SDK
+        run: pnpm sdk:generate --language go
+
+      - name: Initialize Go module
+        working-directory: sdks/go
+        run: go mod init github.com/controlplane/sdk-go 2>/dev/null || true
+
+      - name: Compile Go SDK
+        working-directory: sdks/go
+        run: go build -v ./...
+
+      - name: Format check
+        working-directory: sdks/go
+        run: |
+          if [ -n "$(gofmt -l .)" ]; then
+            echo "Go files need formatting:"
+            gofmt -l .
+            exit 1
+          fi
+
+      - name: Smoke test - types compile
+        working-directory: sdks/go
+        run: |
+          cat > /tmp/smoke_test.go << 'EOF'
+          package main
+          
+          import (
+              "fmt"
+              cp "github.com/controlplane/sdk-go"
+          )
+          
+          func main() {
+              // Test struct creation
+              job := cp.JobRequest{
+                  ID:   "550e8400-e29b-41d4-a716-446655440000",
+                  Type: "test-job",
+              }
+              fmt.Printf("Created JobRequest: %+v\\n", job)
+              
+              // Test client
+              client := cp.NewClient(cp.ClientConfig{
+                  BaseURL: "http://localhost:8080",
+              })
+              _ = client.GetContractVersion()
+              fmt.Println("Client created successfully")
+          }
+          EOF
+          cp /tmp/smoke_test.go .
+          go build -o /tmp/smoke_test ./smoke_test.go
+          /tmp/smoke_test

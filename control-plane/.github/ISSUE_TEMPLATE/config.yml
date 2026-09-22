@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Questions & support
+    url: https://github.com/Hardonian/ControlPlane/discussions
+    about: "Ask and answer questions with the community."

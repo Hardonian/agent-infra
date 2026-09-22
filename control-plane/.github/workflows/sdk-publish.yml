@@ -1,0 +1,187 @@
+name: Publish SDKs
+
+on:
+  push:
+    tags:
+      - 'sdk-v*'
+  workflow_dispatch:
+    inputs:
+      sdk_version:
+        description: 'SDK version to publish'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  generate-sdks:
+    runs-on: ubuntu-latest
+    outputs:
+      sdk_version: ${{ steps.version.outputs.sdk_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build contracts
+        run: pnpm run build:contracts
+
+      - name: Build SDK generator
+        run: pnpm --filter @controlplane/sdk-generator... build
+
+      - name: Generate SDKs
+        run: pnpm sdk:generate
+
+      - name: Extract version
+        id: version
+        run: |
+          if [ "${{ github.event.inputs.sdk_version }}" != "" ]; then
+            echo "sdk_version=${{ github.event.inputs.sdk_version }}" >> $GITHUB_OUTPUT
+          else
+            echo "sdk_version=${GITHUB_REF#refs/tags/sdk-v}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload SDK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-sdks
+          path: sdks/
+
+  publish-typescript:
+    needs: generate-sdks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download SDK artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: generated-sdks
+          path: sdks/
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies and build
+        working-directory: sdks/typescript
+        run: |
+          npm install
+          npm run build
+
+      - name: Publish to npm
+        working-directory: sdks/typescript
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-python:
+    needs: generate-sdks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download SDK artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: generated-sdks
+          path: sdks/
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install build tools
+        run: |
+          cd sdks/python
+          pip install build twine
+
+      - name: Build package
+        working-directory: sdks/python
+        run: python -m build
+
+      - name: Publish to PyPI
+        working-directory: sdks/python
+        run: twine upload dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+
+  publish-go:
+    needs: generate-sdks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download SDK artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: generated-sdks
+          path: sdks/
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Tag Go SDK release
+        run: |
+          VERSION=${{ needs.generate-sdks.outputs.sdk_version }}
+          git tag "go/v${VERSION}"
+          git push origin "go/v${VERSION}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  create-release:
+    needs: [publish-typescript, publish-python, publish-go]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: SDK Release ${{ needs.generate-sdks.outputs.sdk_version }}
+          body: |
+            Auto-generated SDKs for ControlPlane contracts.
+
+            ## Published Packages
+            - **TypeScript (npm)**: `@controlplane/sdk@${{ needs.generate-sdks.outputs.sdk_version }}`
+            - **Python (PyPI)**: `controlplane-sdk==${{ needs.generate-sdks.outputs.sdk_version }}`
+            - **Go**: `github.com/controlplane/sdk-go@v${{ needs.generate-sdks.outputs.sdk_version }}`
+
+            ## Installation
+
+            ### TypeScript
+            ```bash
+            npm install @controlplane/sdk@${{ needs.generate-sdks.outputs.sdk_version }}
+            ```
+
+            ### Python
+            ```bash
+            pip install controlplane-sdk==${{ needs.generate-sdks.outputs.sdk_version }}
+            ```
+
+            ### Go
+            ```bash
+            go get github.com/controlplane/sdk-go@v${{ needs.generate-sdks.outputs.sdk_version }}
+            ```
+          draft: false
+          prerelease: false

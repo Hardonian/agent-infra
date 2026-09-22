@@ -1,0 +1,78 @@
+name: "Bug report"
+description: "Report a reproducible problem in contracts or tooling."
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve ControlPlane! Please include as much detail as you can so we can reproduce quickly.
+  - type: input
+    id: area
+    attributes:
+      label: Contribution lane
+      description: "Which area is affected? (docs / runner / connector / contracts / other)"
+      placeholder: "runner"
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: "What broke?"
+      placeholder: "Contract sync fails when ..."
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: |
+        Include exact commands and their output.
+        Start from a clean checkout so others can follow along.
+      placeholder: |
+        1. git clone https://github.com/Hardonian/ControlPlane.git
+        2. cd ControlPlane
+        3. pnpm install
+        4. pnpm run build
+        5. pnpm run contracts:check
+        6. Observe: [what happens]
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: "Contract validation passes with 18 checks, 0 failures."
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      placeholder: "Validation fails with: [FAIL] runner-manifest:my-runner ..."
+    validations:
+      required: true
+  - type: textarea
+    id: contract_impact
+    attributes:
+      label: Contract impact
+      description: "Does this bug affect contract validation, schema integrity, or downstream consumers?"
+      placeholder: "This causes false positives in contract validation, which could allow breaking changes through CI."
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: "Paste relevant command output. Use `--json` flags where available for structured output."
+      render: shell
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: "Which version or commit are you on?"
+      placeholder: "git rev-parse HEAD"
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: "OS, Node, pnpm, Docker, etc."
+      placeholder: "macOS 14, node 20.10.0, pnpm 8.12.0"

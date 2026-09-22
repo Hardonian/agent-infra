@@ -1,0 +1,128 @@
+version: '3.8'
+
+services:
+  # Message Queue
+  redis:
+    image: redis:7-alpine
+    container_name: controlplane-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - controlplane
+
+  # TruthCore - Source of Truth
+  truthcore:
+    build:
+      context: ./services/truthcore
+      dockerfile: Dockerfile
+    container_name: controlplane-truthcore
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - REDIS_URL=redis://redis:6379
+      - CONTRACT_VERSION=1.0.0
+      - LOG_LEVEL=info
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - controlplane
+
+  # JobForge - Job Queue & Orchestration
+  jobforge:
+    build:
+      context: ./services/jobforge
+      dockerfile: Dockerfile
+    container_name: controlplane-jobforge
+    ports:
+      - "3002:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - REDIS_URL=redis://redis:6379
+      - TRUTHCORE_URL=http://truthcore:3000
+      - CONTRACT_VERSION=1.0.0
+      - LOG_LEVEL=info
+    depends_on:
+      redis:
+        condition: service_healthy
+      truthcore:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - controlplane
+
+  # Module Runner - Example
+  runner-example:
+    build:
+      context: ./services/runner-example
+      dockerfile: Dockerfile
+    container_name: controlplane-runner-example
+    ports:
+      - "3003:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - JOBFORGE_URL=http://jobforge:3000
+      - CONTRACT_VERSION=1.0.0
+      - LOG_LEVEL=info
+      - RUNNER_NAME=example-runner
+      - RUNNER_ID=runner-example-001
+    depends_on:
+      jobforge:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - controlplane
+
+  # Local development stack health checker
+  stack-health:
+    image: alpine/curl:latest
+    container_name: controlplane-health-check
+    command: >
+      sh -c '
+        echo "Waiting for all services..." &&
+        sleep 30 &&
+        echo "Checking TruthCore..." &&
+        curl -sf http://truthcore:3000/health &&
+        echo "Checking JobForge..." &&
+        curl -sf http://jobforge:3000/health &&
+        echo "Checking Runner..." &&
+        curl -sf http://runner-example:3000/health &&
+        echo "All services healthy!"
+      '
+    depends_on:
+      - truthcore
+      - jobforge
+      - runner-example
+    networks:
+      - controlplane
+    profiles:
+      - health-check
+
+networks:
+  controlplane:
+    driver: bridge

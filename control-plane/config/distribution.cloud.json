@@ -1,0 +1,22 @@
+{
+  "mode": "cloud",
+  "featureFlags": {
+    "cloud": {
+      "managedHosting": true,
+      "managedDatabase": true,
+      "dashboard": true,
+      "slaSupport": true,
+      "auditLogs": true,
+      "enterpriseSso": true,
+      "usageAnalytics": true,
+      "multiRegionFailover": true
+    }
+  },
+  "extensions": {
+    "runners": true,
+    "connectors": true,
+    "webhooks": true,
+    "marketplace": true,
+    "observabilityExporters": true
+  }
+}

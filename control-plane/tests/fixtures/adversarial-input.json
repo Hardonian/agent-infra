@@ -1,0 +1,26 @@
+{
+  "requestId": "cp-fixture-adversarial-001",
+  "timestamp": "2026-01-01T00:00:00.000Z",
+  "payload": {
+    "action": "evaluate",
+    "target": "truthcore",
+    "scenario": "adversarial",
+    "notes": "Adversarial fixture with edge-case data",
+    "emptyObject": {},
+    "emptyArray": [],
+    "nullValue": null,
+    "deeplyNested": {
+      "level1": {
+        "level2": {
+          "level3": {
+            "level4": "deep-value"
+          }
+        }
+      }
+    },
+    "unicodeContent": "Hello \u4e16\u754c \ud83c\udf0d",
+    "largeNumber": 9999999999999999,
+    "booleanField": false,
+    "secretField_token": "should-be-redacted"
+  }
+}

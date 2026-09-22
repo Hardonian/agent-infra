@@ -1,0 +1,8 @@
+*.md
+*.yml
+*.yaml
+*.json
+*.lock
+LICENSE
+.gitignore
+.prettierrc

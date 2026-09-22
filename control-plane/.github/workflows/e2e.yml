@@ -1,0 +1,129 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main, next]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  e2e:
+    name: End-to-End Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@d882d12c64e032187b2edb46d3a0d003b7a43598 # v2.4.0
+        with:
+          version: 8.12.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build contracts
+        run: pnpm run build:contracts
+
+      - name: Build test kit
+        run: pnpm run build:test-kit
+
+      - name: Install Playwright
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Start stack
+        run: |
+          # Create mock service placeholders for E2E testing
+          mkdir -p services/truthcore services/jobforge services/runner-example
+          
+          # Create minimal mock Dockerfiles for CI
+          cat > services/truthcore/Dockerfile << 'EOF'
+          FROM node:20-alpine
+          WORKDIR /app
+          RUN echo '{"name":"truthcore","version":"1.0.0","main":"server.js"}' > package.json
+          RUN echo 'const http = require("http"); const s = http.createServer((req,res)=>{if(req.url==="/health"){res.writeHead(200);res.end(JSON.stringify({status:"healthy"}));}else{res.writeHead(404);res.end();}}); s.listen(3000);' > server.js
+          CMD ["node", "server.js"]
+          EXPOSE 3000
+          EOF
+          
+          cat > services/jobforge/Dockerfile << 'EOF'
+          FROM node:20-alpine
+          WORKDIR /app
+          RUN echo '{"name":"jobforge","version":"1.0.0","main":"server.js"}' > package.json
+          RUN echo 'const http = require("http"); const s = http.createServer((req,res)=>{if(req.url==="/health"){res.writeHead(200);res.end(JSON.stringify({status:"healthy"}));}else{res.writeHead(404);res.end();}}); s.listen(3000);' > server.js
+          CMD ["node", "server.js"]
+          EXPOSE 3000
+          EOF
+          
+          cat > services/runner-example/Dockerfile << 'EOF'
+          FROM node:20-alpine
+          WORKDIR /app
+          RUN echo '{"name":"runner","version":"1.0.0","main":"server.js"}' > package.json
+          RUN echo 'const http = require("http"); const s = http.createServer((req,res)=>{if(req.url==="/health"){res.writeHead(200);res.end(JSON.stringify({status:"healthy"}));}else{res.writeHead(404);res.end();}}); s.listen(3000);' > server.js
+          CMD ["node", "server.js"]
+          EXPOSE 3000
+          EOF
+          
+          # Add curl to images for health checks
+          sed -i 's/FROM node:20-alpine/FROM node:20-alpine\nRUN apk add --no-cache curl/' services/*/Dockerfile
+          
+          docker-compose up -d --build
+          sleep 15
+
+      - name: Wait for services
+        run: |
+          for i in {1..30}; do
+            if curl -sf http://localhost:3001/health && \
+               curl -sf http://localhost:3002/health && \
+               curl -sf http://localhost:3003/health; then
+              echo "All services healthy!"
+              exit 0
+            fi
+            echo "Waiting for services... attempt $i/30"
+            sleep 5
+          done
+          echo "Services failed to become healthy"
+          docker-compose logs
+          exit 1
+
+      - name: Run smoke tests
+        run: pnpm run test:smoke
+
+      - name: Run E2E tests
+        run: pnpm run test:e2e
+        env:
+          TRUTHCORE_URL: http://localhost:3001
+          JOBFORGE_URL: http://localhost:3002
+          RUNNER_URL: http://localhost:3003
+
+      - name: Cleanup
+        if: always()
+        run: docker-compose down -v
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.4.0
+        with:
+          name: test-results
+          path: |
+            test-results/
+            playwright-report/
+            smoke-report.json
+          retention-days: 7

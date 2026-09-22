@@ -1,0 +1,24 @@
+{
+  "name": "aias",
+  "version": "0.1.0",
+  "description": "AI Audit Service - compliance auditing, policy evaluation, and audit-trail generation",
+  "entrypoint": {
+    "command": "node",
+    "args": [
+      "scripts/adapters/runner-adapter.mjs",
+      "--runner",
+      "aias"
+    ]
+  },
+  "capabilities": [
+    "adapter",
+    "dry-run",
+    "audit-trail"
+  ],
+  "requiredEnv": [],
+  "outputs": [
+    "report",
+    "audit-trail"
+  ],
+  "docs": "docs/REALITY_MAP.md"
+}

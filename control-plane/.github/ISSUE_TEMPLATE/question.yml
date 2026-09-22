@@ -1,0 +1,22 @@
+name: "Question"
+description: "Ask a question or clarification."
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For open-ended discussion, consider GitHub Discussions instead.
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What do you need help with?
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Share any relevant details or links.
+    validations:
+      required: false

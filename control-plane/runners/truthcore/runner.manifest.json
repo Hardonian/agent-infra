@@ -1,0 +1,22 @@
+{
+  "name": "truthcore",
+  "version": "0.1.0",
+  "description": "ControlPlane adapter for truthcore",
+  "entrypoint": {
+    "command": "node",
+    "args": [
+      "scripts/adapters/runner-adapter.mjs",
+      "--runner",
+      "truthcore"
+    ]
+  },
+  "capabilities": [
+    "adapter",
+    "dry-run"
+  ],
+  "requiredEnv": [],
+  "outputs": [
+    "report"
+  ],
+  "docs": "docs/reality/EXECUTION_GRAPH.md"
+}
