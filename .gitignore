@@ -24,3 +24,5 @@ build/
 *.dll
 *.so
 *.dylib
+# Regenerable build artifacts (do not track)
+.next/
