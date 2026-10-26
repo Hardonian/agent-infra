@@ -22,3 +22,6 @@ build/
 .vscode/
 *.pyc
 .next/
+
+# turborepo cache (build artifact)
+.turbo/
