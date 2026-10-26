@@ -1,0 +1,72 @@
+{
+  "schema": "hx370.node-profile/v1",
+  "observed_at": "2026-10-26T13:35:54Z",
+  "node_identity": {
+    "enrollment_id": "hx370-dev-01",
+    "hostname": "HX370",
+    "note": "stable id from enrollment, not a raw hardware identifier"
+  },
+  "host": {
+    "class": "wsl2",
+    "is_wsl": true,
+    "wsl_version": "2.7.8.0",
+    "os": "Ubuntu 24.04.5 LTS",
+    "kernel": "6.18.33.1-microsoft-standard-WSL2",
+    "arch": "x86_64"
+  },
+  "cpu": {
+    "model": "AMD Ryzen AI 9 HX 370 w/ Radeon 890M",
+    "nproc_effective": 16,
+    "threads_total": 16
+  },
+  "memory": {
+    "total_gb_visible": 19.5,
+    "available_kb": 17597792,
+    "swap_total_kb": 18628428,
+    "note": "WSL-visible; integrated GPU shares system memory (not independent)"
+  },
+  "storage": {
+    "repo_mount": "/home/scott",
+    "repo_fs_type": "ext4",
+    "repo_fs_size": "1007G",
+    "repo_fs_avail": "826G",
+    "fs_gate": "pass",
+    "fs_gate_evidence": "write+fsync+readback+delete round-trip OK on ext4 at /home/scott"
+  },
+  "acceleration": {
+    "gpu_visible": true,
+    "gpu_model": "AMD Radeon(TM) 890M Graphics",
+    "gpu_compute_api": "none",
+    "gpu_compute_verified": false,
+    "npu_visible": "no",
+    "npu_compute_verified": false,
+    "note": "device listing is not compute evidence; no ROCm/DirectML/NPU runtime verified => CPU/remote fallback"
+  },
+  "toolchain": {
+    "git": true, "node": true, "python": true,
+    "docker": true, "gh": true, "go": true,
+    "cargo": true, "powershell_interop": true
+  },
+  "resource_policy": {
+    "load1": 0.27,
+    "build_workers": 2,
+    "mem_headroom_gb": 15.5,
+    "on_battery": "unknown",
+    "note": "conservative; increase only after measuring a known workload"
+  },
+  "routing": {
+    "remote_epyc": "reachable",
+    "remote_ssh_port_22": "open",
+    "remote_app_port_4000": "closed",
+    "remote_host_role": "sustained inference / always-on shared services (verify, do not assume)",
+    "local_inference_gateway": "healthy",
+    "policy": "private local endpoints default; remote requires verified auth; no provider fallback when offline"
+  },
+  "confidence": {
+    "host_match_hx370": true,
+    "fs_gate": "pass",
+    "gpu_compute": "untested",
+    "npu_compute": "untested",
+    "remote_routing": "reachable"
+  }
+}
