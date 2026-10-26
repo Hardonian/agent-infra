@@ -22,9 +22,34 @@ import (
 	"github.com/agentmesh/agentmesh/internal/telemetry"
 )
 
-func buildControllerServer(cfg *config.AppConfig) (*server.Server, error) {
-	// Datastore (MemoryStore enables zero-dependency instant startup, Postgres configurable)
-	store := database.NewMemoryStore()
+func buildControllerServer(cfg *config.AppConfig) (*server.Server, func(), error) {
+	// Durable store when DATABASE_URL is reachable; otherwise zero-dependency in-memory store.
+	// In production a reachable DATABASE_URL is required (config enforces its presence) and a
+	// failed connect is fatal — never silently fall back to losing state.
+	migrationsDir := os.Getenv("AGENTMESH_MIGRATIONS_DIR")
+	if migrationsDir == "" {
+		migrationsDir = "./migrations"
+	}
+	var store database.Store
+	var pgStore *database.PostgresStore
+	closeFn := func() {}
+	if cfg.DatabaseURL != "" {
+		ps, err := database.NewPostgresStore(context.Background(), cfg.DatabaseURL, migrationsDir)
+		if err != nil {
+			if cfg.Environment == "production" {
+				return nil, nil, fmt.Errorf("durable store required in production: %w", err)
+			}
+			fmt.Fprintf(os.Stderr, "WARNING: Postgres unavailable (%v); using in-memory store (state will NOT survive restart)\n", err)
+			store = database.NewMemoryStore()
+		} else {
+			pgStore = ps
+			store = ps
+			closeFn = ps.Close
+			fmt.Fprintf(os.Stderr, "durable Postgres store active (agents/policies/credentials persist across restart)\n")
+		}
+	} else {
+		store = database.NewMemoryStore()
+	}
 
 	// Initial Corporate Safety Policy
 	defaultPolicy := &policy.Policy{
@@ -68,7 +93,7 @@ func buildControllerServer(cfg *config.AppConfig) (*server.Server, error) {
 	// Cryptographic Signing Key
 	kp, err := crypto.GenerateKeyPair(cfg.SigningKeyID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate ed25519 key pair: %w", err)
+		return nil, nil, fmt.Errorf("failed to generate ed25519 key pair: %w", err)
 	}
 
 	srv := server.NewServer(
@@ -81,7 +106,10 @@ func buildControllerServer(cfg *config.AppConfig) (*server.Server, error) {
 		auditLogger,
 		kp,
 	)
-	return srv, nil
+	if pgStore != nil {
+		srv.SetReadyCheck(func(ctx context.Context) error { return pgStore.Ping(ctx) })
+	}
+	return srv, closeFn, nil
 }
 
 func main() {
@@ -100,11 +128,12 @@ func main() {
 		"env", cfg.Environment,
 	)
 
-	srv, err := buildControllerServer(cfg)
+	srv, closeStore, err := buildControllerServer(cfg)
 	if err != nil {
 		logger.Error("Failed to build controller server", "error", err)
 		os.Exit(1)
 	}
+	defer closeStore()
 
 	httpServer := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.HTTPPort),

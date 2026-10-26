@@ -73,7 +73,14 @@ type Server struct {
 	gkeProvider        *execution.GKEProvider
 	cloudRunProvider   *execution.CloudRunProvider
 	reconcileEng       *reconcile.Engine
+	// readyCheck, when set, is consulted by /readyz to report dependency readiness (e.g. DB ping).
+	readyCheck func(ctx context.Context) error
 }
+
+// SetReadyCheck registers a dependency readiness probe invoked by /readyz. A non-nil error puts
+// the instance OUT OF the ready state (HTTP 503) with the reason, so a failed critical dependency
+// yields an actionable unavailable response rather than a silent ready.
+func (s *Server) SetReadyCheck(fn func(ctx context.Context) error) { s.readyCheck = fn }
 
 func NewServer(
 	store database.Store,
@@ -163,6 +170,13 @@ func (s *Server) setupRoutes() {
 	})
 	r.Get("/readyz", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
+		if s.readyCheck != nil {
+			if err := s.readyCheck(r.Context()); err != nil {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				_ = json.NewEncoder(w).Encode(map[string]string{"status": "unavailable", "reason": err.Error()})
+				return
+			}
+		}
 		_, _ = w.Write([]byte(`{"status":"ready"}`))
 	})
 	r.Handle("/metrics", promhttp.Handler())

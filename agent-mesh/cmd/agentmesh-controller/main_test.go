@@ -15,10 +15,11 @@ func TestControllerServer_BuildAndHealth(t *testing.T) {
 		SigningKeyID: "test_key",
 	}
 
-	srv, err := buildControllerServer(cfg)
+	srv, closeStore, err := buildControllerServer(cfg)
 	if err != nil {
 		t.Fatalf("failed to build controller server: %v", err)
 	}
+	defer closeStore()
 
 	req := httptest.NewRequest("GET", "/healthz", nil)
 	rec := httptest.NewRecorder()
