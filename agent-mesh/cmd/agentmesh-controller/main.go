@@ -89,7 +89,12 @@ func buildControllerServer(cfg *config.AppConfig) (*server.Server, func(), error
 	collector := telemetry.NewCollector()
 	canaryMgr := canary.NewManager()
 	approvalSvc := approval.NewService()
-	auditLogger := audit.NewLogger()
+	// Audit trail: durable (Postgres-backed, chain continuous across restart) when a DB is active,
+	// in-memory otherwise.
+	var auditLogger audit.Sink = audit.NewLogger()
+	if pgStore != nil {
+		auditLogger = audit.NewDurableLogger(audit.NewPostgresStore(pgStore.Pool()))
+	}
 
 	// Cryptographic Signing Key
 	kp, err := crypto.GenerateKeyPair(cfg.SigningKeyID)

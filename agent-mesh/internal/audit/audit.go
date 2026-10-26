@@ -63,7 +63,7 @@ func (l *Logger) Log(tenantID string, eventType EventType, actor, subject string
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	now := time.Now().UTC()
+	now := time.Now().UTC().Truncate(time.Microsecond) // PG TIMESTAMPTZ is microsecond-precision; truncate so the hash survives the durable round-trip
 	prevHash := l.lastHash[tenantID]
 	if prevHash == "" {
 		prevHash = "0000000000000000000000000000000000000000000000000000000000000000"

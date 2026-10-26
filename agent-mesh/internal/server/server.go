@@ -54,7 +54,7 @@ type Server struct {
 	telemetry          *telemetry.Collector
 	canaryMgr          *canary.Manager
 	approvalSvc        *approval.Service
-	auditLogger        *audit.Logger
+	auditLogger        audit.Sink
 	signingKey         *crypto.KeyPair
 	reliabilityTracker *reliability.ReliabilityTracker
 	sloManager         *slo.Manager
@@ -95,7 +95,7 @@ func NewServer(
 	tel *telemetry.Collector,
 	cm *canary.Manager,
 	appSvc *approval.Service,
-	auditLog *audit.Logger,
+	auditLog audit.Sink,
 	keyPair *crypto.KeyPair,
 ) *Server {
 	s := &Server{
