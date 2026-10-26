@@ -41,7 +41,7 @@ export const MarketplaceTrustSignals = z.object({
         .default([]),
       scanDurationMs: z.number().nonnegative().optional(),
     })
-    .default({}),
+    .prefault({}),
   codeQualityScore: z.number().min(0).max(100).optional(),
   maintainerReputation: z.enum(['official', 'verified', 'community', 'unknown']).default('unknown'),
   downloadCount: z.number().nonnegative().default(0),
@@ -50,7 +50,7 @@ export const MarketplaceTrustSignals = z.object({
       average: z.number().min(0).max(5).optional(),
       count: z.number().nonnegative().default(0),
     })
-    .default({}),
+    .prefault({}),
 });
 export type MarketplaceTrustSignals = z.infer<typeof MarketplaceTrustSignals>;
 
@@ -123,7 +123,7 @@ export const MarketplaceRunner = z.object({
       changelog: z.string().url().optional(),
       examples: z.array(z.string().url()).default([]),
     })
-    .default({}),
+    .prefault({}),
   license: z.string(),
   keywords: z.array(z.string()).default([]),
   capabilities: z.array(RunnerCapability),
@@ -150,7 +150,7 @@ export const MarketplaceRunner = z.object({
       binary: z.string().optional(),
       source: z.string().optional(),
     })
-    .default({}),
+    .prefault({}),
 });
 export type MarketplaceRunner = z.infer<typeof MarketplaceRunner>;
 
@@ -178,11 +178,11 @@ export const MarketplaceConnector = z.object({
       configuration: z.string().url().optional(),
       examples: z.array(z.string().url()).default([]),
     })
-    .default({}),
+    .prefault({}),
   license: z.string(),
   keywords: z.array(z.string()).default([]),
-  inputSchema: z.record(z.unknown()),
-  outputSchema: z.record(z.unknown()),
+  inputSchema: z.record(z.string(), z.unknown()),
+  outputSchema: z.record(z.string(), z.unknown()),
   compatibility: CompatibilityInfo,
   trustSignals: MarketplaceTrustSignals,
   deprecation: DeprecationInfo.default({ isDeprecated: false }),
@@ -204,7 +204,7 @@ export const MarketplaceConnector = z.object({
       npm: z.string().optional(),
       docker: z.string().optional(),
     })
-    .default({}),
+    .prefault({}),
 });
 export type MarketplaceConnector = z.infer<typeof MarketplaceConnector>;
 
@@ -227,8 +227,8 @@ export const MarketplaceIndex = z.object({
     verifiedCount: z.number().nonnegative(),
     pendingReviewCount: z.number().nonnegative(),
     deprecatedCount: z.number().nonnegative(),
-    categories: z.record(z.number().nonnegative()),
-    connectorTypes: z.record(z.number().nonnegative()),
+    categories: z.record(z.string(), z.number().nonnegative()),
+    connectorTypes: z.record(z.string(), z.number().nonnegative()),
   }),
   runners: z.array(MarketplaceRunner),
   connectors: z.array(MarketplaceConnector),
@@ -266,10 +266,10 @@ export const MarketplaceQueryResult = z.object({
   hasMore: z.boolean(),
   items: z.array(z.union([MarketplaceRunner, MarketplaceConnector])),
   facets: z.object({
-    categories: z.record(z.number()).default({}),
-    trustLevels: z.record(z.number()).default({}),
-    connectorTypes: z.record(z.number()).default({}),
-    status: z.record(z.number()).default({}),
+    categories: z.record(z.string(), z.number()).prefault({}),
+    trustLevels: z.record(z.string(), z.number()).prefault({}),
+    connectorTypes: z.record(z.string(), z.number()).prefault({}),
+    status: z.record(z.string(), z.number()).prefault({}),
   }),
 });
 export type MarketplaceQueryResult = z.infer<typeof MarketplaceQueryResult>;

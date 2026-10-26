@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { BenchmarkConfig, BenchmarkMetric, BenchmarkResult } from '../contracts/index.js';
 import { BenchmarkRunner } from './base-runner.js';
 import { ConcurrencyLimiter } from '../utils/concurrency.js';
@@ -486,7 +487,7 @@ export class QueuePerformanceRunner extends BenchmarkRunner {
     const timestamp = Date.now();
 
     const payload = structuredClone(basePayload);
-    payload.id = crypto.randomUUID();
+    payload.id = randomUUID();
     payload.payload.data.counter = counter;
     payload.payload.data.timestamp = timestamp;
     payload.metadata.createdAt = new Date(timestamp).toISOString();

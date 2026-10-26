@@ -47,7 +47,7 @@ export const VersionedRunnerManifest = z.object({
   entrypoint: z.object({
     command: z.string().min(1, 'Command is required'),
     args: z.array(z.string()).default([]),
-    env: z.record(z.string()).optional(),
+    env: z.record(z.string(), z.string()).optional(),
     workingDir: z.string().optional(),
   }),
 
@@ -115,7 +115,7 @@ export const VersionedRunnerManifest = z.object({
 
       memoryLimit: z.string().optional().describe('Memory limit (e.g., "256Mi", "1Gi")'),
     })
-    .default({}),
+    .prefault({}),
 
   // Metadata
   metadata: z
@@ -128,7 +128,7 @@ export const VersionedRunnerManifest = z.object({
       createdAt: z.string().datetime().optional(),
       updatedAt: z.string().datetime().optional(),
     })
-    .default({}),
+    .prefault({}),
 
   // Health check configuration
   healthCheck: z
@@ -199,7 +199,7 @@ export const InvocationRequest = z.object({
       // Source information
       source: z
         .object({
-          ip: z.string().ip().optional(),
+          ip: z.union([z.ipv4(), z.ipv6()]).optional(),
           userAgent: z.string().optional(),
           requestId: z.string().optional(),
         })
@@ -216,9 +216,9 @@ export const InvocationRequest = z.object({
       deadline: z.string().datetime().optional().describe('Hard deadline for execution completion'),
 
       // Custom context extensions
-      extensions: z.record(z.unknown()).default({}),
+      extensions: z.record(z.string(), z.unknown()).prefault({}),
     })
-    .default({}),
+    .prefault({}),
 
   // Execution configuration (overrides manifest defaults)
   config: z
@@ -226,7 +226,7 @@ export const InvocationRequest = z.object({
       timeoutMs: z.number().int().positive().optional(),
       maxRetries: z.number().int().min(0).max(5).optional(),
       retryDelayMs: z.number().int().nonnegative().optional(),
-      env: z.record(z.string()).optional(),
+      env: z.record(z.string(), z.string()).optional(),
       workingDir: z.string().optional(),
     })
     .optional(),
@@ -285,7 +285,7 @@ export const InvocationResponse = z.object({
         type: z.string(),
         size: z.number().int().nonnegative().optional(),
         url: z.string().url().optional(),
-        metadata: z.record(z.unknown()).optional(),
+        metadata: z.record(z.string(), z.unknown()).optional(),
       })
     )
     .default([]),
@@ -318,7 +318,7 @@ export const InvocationResponse = z.object({
     .optional(),
 
   // Additional metadata
-  metadata: z.record(z.unknown()).default({}),
+  metadata: z.record(z.string(), z.unknown()).prefault({}),
 });
 
 export type InvocationResponse = z.infer<typeof InvocationResponse>;
@@ -374,7 +374,7 @@ export const EnhancedErrorEnvelope = z.object({
       stack: z.string().optional(),
 
       // Contextual information
-      context: z.record(z.unknown()).optional().describe('Additional context about the error'),
+      context: z.record(z.string(), z.unknown()).optional().describe('Additional context about the error'),
 
       // Related IDs
       relatedIds: z
@@ -464,7 +464,7 @@ export const RegistryState = z.object({
         followSymlinks: z.boolean().default(false),
         maxDepth: z.number().int().positive().default(3),
       })
-      .default({}),
+      .prefault({}),
   }),
 
   // Discovered modules
@@ -573,7 +573,7 @@ export const DriftReport = z.object({
       error: z.number().int().nonnegative(),
       fatal: z.number().int().nonnegative(),
     }),
-    byType: z.record(z.number().int().nonnegative()),
+    byType: z.record(z.string(), z.number().int().nonnegative()),
     modulesAffected: z.number().int().nonnegative(),
     autoFixable: z.number().int().nonnegative(),
   }),

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { randomUUID } from 'node:crypto';
 import { Command } from 'commander';
 import chalk from 'chalk';
 import { BenchmarkEngine } from '../benchmark-engine.js';
@@ -325,7 +326,7 @@ function createBenchmarkSuite(
   }
 
   return {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     name: desc.name,
     description: desc.desc,
     configs,

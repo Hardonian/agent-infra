@@ -59,6 +59,12 @@ importers:
       '@commitlint/config-conventional':
         specifier: ^21.2.2
         version: 21.2.2
+      '@controlplane/contract-kit':
+        specifier: workspace:*
+        version: link:packages/contract-kit
+      '@controlplane/controlplane':
+        specifier: workspace:*
+        version: link:packages/controlplane
       '@playwright/test':
         specifier: ^1.63.0
         version: 1.63.0

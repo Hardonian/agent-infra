@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type {
   BenchmarkSuite,
   BenchmarkConfig,
@@ -59,7 +60,7 @@ export class BenchmarkEngine {
     const totalDuration = endTime - startTime;
 
     const report: BenchmarkReport = {
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       timestamp: new Date().toISOString(),
       environment: {
         nodeVersion: process.version,
@@ -168,7 +169,7 @@ export class BenchmarkEngine {
     const status: 'passed' | 'failed' | 'skipped' = failedCount > 0 ? 'failed' : 'passed';
 
     return {
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       name: config.name,
       description: config.description,
       suite: 'all',
@@ -190,7 +191,7 @@ export class BenchmarkEngine {
   private createErrorResult(config: BenchmarkConfig, error: string): BenchmarkResult {
     const now = new Date().toISOString();
     return {
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       name: config.name,
       description: config.description,
       suite: config.suite,

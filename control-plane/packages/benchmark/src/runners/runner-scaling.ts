@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { BenchmarkConfig, BenchmarkResult, BenchmarkMetric } from '../contracts/index.js';
 import { BenchmarkRunner } from './base-runner.js';
 
@@ -156,7 +157,7 @@ export class RunnerScalingRunner extends BenchmarkRunner {
 
     while (Date.now() < testEnd) {
       const isWarmup = Date.now() < warmupEnd;
-      const jobId = crypto.randomUUID();
+      const jobId = randomUUID();
       const submitTime = Date.now();
 
       try {

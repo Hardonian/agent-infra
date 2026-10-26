@@ -7,7 +7,7 @@ export const TruthValue = z.union([
   z.boolean(),
   z.null(),
   z.array(z.unknown()),
-  z.record(z.unknown()),
+  z.record(z.string(), z.unknown()),
 ]);
 export type TruthValue = z.infer<typeof TruthValue>;
 
@@ -20,7 +20,7 @@ export const TruthAssertion = z.object({
   timestamp: z.string().datetime(),
   source: z.string(),
   expiresAt: z.string().datetime().optional(),
-  metadata: z.record(z.unknown()).default({}),
+  metadata: z.record(z.string(), z.unknown()).prefault({}),
 });
 export type TruthAssertion = z.infer<typeof TruthAssertion>;
 
@@ -38,7 +38,7 @@ export const TruthQuery = z.object({
       before: z.string().datetime().optional(),
       after: z.string().datetime().optional(),
     })
-    .default({}),
+    .prefault({}),
   limit: z.number().int().positive().default(100),
   offset: z.number().int().nonnegative().default(0),
 });
@@ -64,7 +64,7 @@ export const TruthSubscription = z.object({
     .object({
       minConfidence: z.number().min(0).max(1).default(0.0),
     })
-    .default({}),
+    .prefault({}),
   webhookUrl: z.string().url().optional(),
   createdAt: z.string().datetime(),
 });
@@ -73,7 +73,7 @@ export type TruthSubscription = z.infer<typeof TruthSubscription>;
 export const TruthCoreRequest = z.object({
   id: z.string().uuid(),
   type: z.enum(['assert', 'query', 'subscribe', 'unsubscribe']),
-  payload: z.record(z.unknown()),
+  payload: z.record(z.string(), z.unknown()),
   metadata: z.object({
     correlationId: z.string().uuid().optional(),
     source: z.string(),

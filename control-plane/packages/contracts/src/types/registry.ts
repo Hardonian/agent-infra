@@ -20,7 +20,7 @@ export const ConnectorConfig = z.object({
   type: ConnectorType,
   version: z.string(),
   description: z.string(),
-  configSchema: z.record(z.unknown()),
+  configSchema: z.record(z.string(), z.unknown()),
   required: z.boolean().default(false),
   healthCheckable: z.boolean().default(true),
 });
@@ -35,7 +35,7 @@ export const ConnectorInstance = z.object({
   lastConnectedAt: z.string().datetime().optional(),
   lastErrorAt: z.string().datetime().optional(),
   errorMessage: z.string().optional(),
-  metadata: z.record(z.unknown()).default({}),
+  metadata: z.record(z.string(), z.unknown()).prefault({}),
 });
 export type ConnectorInstance = z.infer<typeof ConnectorInstance>;
 
@@ -91,7 +91,7 @@ export const CapabilityRegistry = z.object({
     totalConnectors: z.number().int().nonnegative(),
     healthyRunners: z.number().int().nonnegative(),
     healthyConnectors: z.number().int().nonnegative(),
-    categories: z.record(z.number().int().nonnegative()),
+    categories: z.record(z.string(), z.number().int().nonnegative()),
   }),
 });
 export type CapabilityRegistry = z.infer<typeof CapabilityRegistry>;
@@ -123,7 +123,7 @@ export const RegistryDiff = z.object({
     z.object({
       type: z.enum(['runner', 'connector', 'capability']),
       id: z.string(),
-      changes: z.record(
+      changes: z.record(z.string(), 
         z.object({
           old: z.unknown(),
           new: z.unknown(),

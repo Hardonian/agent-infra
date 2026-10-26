@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { randomUUID } from 'node:crypto';
 import {
   runAllContractTestsDetailed,
   PredefinedTestSuites,
@@ -140,7 +141,7 @@ function formatJUnit(
 async function main() {
   // Run with correlation context
   return correlation.runWithNew(async () => {
-    const runId = correlation.getId() ?? crypto.randomUUID();
+    const runId = correlation.getId() ?? randomUUID();
     const childLogger = logger.child({ correlationId: runId });
     const startTime = Date.now();
 

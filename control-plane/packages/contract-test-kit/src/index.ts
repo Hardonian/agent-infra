@@ -62,7 +62,7 @@ class ValidationCache {
 
   getKey(schema: ZodSchema, data: unknown): string {
     // Create a deterministic key based on schema shape and data
-    const schemaKey = (schema as { _id?: string })._id || String(schema._type);
+    const schemaKey = (schema as { _id?: string })._id || String(schema.constructor.name);
     const dataKey =
       typeof data === 'object' && data !== null
         ? JSON.stringify(data).slice(0, 500) // Limit key size
@@ -139,7 +139,7 @@ export class ContractValidator {
       path: issue.path.join('.'),
       message: issue.message,
       code: issue.code,
-      value: issue.path.length > 0 ? this.getValueAtPath(data, issue.path) : undefined,
+      value: issue.path.length > 0 ? this.getValueAtPath(data, issue.path as (string | number)[]) : undefined,
     }));
 
     const validationResult: ValidationResult = {

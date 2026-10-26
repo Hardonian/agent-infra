@@ -55,7 +55,7 @@ export function createLogger(options: LoggerOptions) {
       logger.fatal({ ...context }, message);
     },
 
-    errorContract: (error: typeof ErrorEnvelope._type, context?: LogContext) => {
+    errorContract: (error: ErrorEnvelope, context?: LogContext) => {
       logger.error(
         {
           error: {

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { BenchmarkConfig, BenchmarkResult, BenchmarkMetric } from '../contracts/index.js';
 import { BenchmarkRunner } from './base-runner.js';
 
@@ -159,7 +160,7 @@ export class TruthCoreQueryRunner extends BenchmarkRunner {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            id: crypto.randomUUID(),
+            id: randomUUID(),
             subject: `benchmark-subject-${i % 10}`,
             predicate: 'benchmark.test',
             object: { index: i, data: 'test-data' },
@@ -186,7 +187,7 @@ export class TruthCoreQueryRunner extends BenchmarkRunner {
 
     while (Date.now() < testEnd) {
       const isWarmup = Date.now() < warmupEnd;
-      const queryId = crypto.randomUUID();
+      const queryId = randomUUID();
       const submitTime = Date.now();
 
       try {
@@ -243,7 +244,7 @@ export class TruthCoreQueryRunner extends BenchmarkRunner {
 
     while (Date.now() < testEnd) {
       const isWarmup = Date.now() < warmupEnd;
-      const queryId = crypto.randomUUID();
+      const queryId = randomUUID();
       const submitTime = Date.now();
 
       try {

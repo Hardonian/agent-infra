@@ -34,8 +34,8 @@ export type JobMetadata = z.infer<typeof JobMetadata>;
 export const JobPayload = z.object({
   type: z.string(),
   version: z.string().default('1.0.0'),
-  data: z.record(z.unknown()),
-  options: z.record(z.unknown()).default({}),
+  data: z.record(z.string(), z.unknown()),
+  options: z.record(z.string(), z.unknown()).prefault({}),
 });
 export type JobPayload = z.infer<typeof JobPayload>;
 
@@ -100,7 +100,7 @@ export const JobEvent = z.object({
   type: JobEventType,
   jobId: JobId,
   timestamp: z.string().datetime(),
-  data: z.record(z.unknown()).optional(),
+  data: z.record(z.string(), z.unknown()).optional(),
   metadata: z.object({
     service: z.string(),
     version: z.string(),

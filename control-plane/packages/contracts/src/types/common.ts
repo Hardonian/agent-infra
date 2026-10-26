@@ -56,8 +56,8 @@ export const ApiRequest = z.object({
   id: z.string().uuid(),
   method: z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']),
   path: z.string(),
-  headers: z.record(z.string()).default({}),
-  query: z.record(z.unknown()).default({}),
+  headers: z.record(z.string(), z.string()).prefault({}),
+  query: z.record(z.string(), z.unknown()).prefault({}),
   body: z.unknown(),
   metadata: z.object({
     correlationId: z.string().uuid().optional(),
@@ -70,7 +70,7 @@ export type ApiRequest = z.infer<typeof ApiRequest>;
 export const ApiResponse = z.object({
   requestId: z.string().uuid(),
   statusCode: z.number().int().min(100).max(599),
-  headers: z.record(z.string()).default({}),
+  headers: z.record(z.string(), z.string()).prefault({}),
   body: z.unknown(),
   error: ErrorEnvelope.optional(),
   metadata: z.object({

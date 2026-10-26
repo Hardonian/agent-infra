@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { BenchmarkConfig, BenchmarkResult, BenchmarkMetric } from '../contracts/index.js';
 import { BenchmarkRunner } from './base-runner.js';
 import {
@@ -344,7 +345,7 @@ export class ContractValidationRunner extends BenchmarkRunner {
 
   private createValidationDataPool(poolSize: number): ValidationDataPool {
     const baseTimestamp = Date.now();
-    const ids = this.buildDataPool(poolSize, () => crypto.randomUUID());
+    const ids = this.buildDataPool(poolSize, () => randomUUID());
     const timestamps = this.buildDataPool(poolSize, (index) =>
       new Date(baseTimestamp + index * 1000).toISOString()
     );

@@ -42,7 +42,7 @@ export const BenchmarkResult = z.object({
   metrics: z.array(BenchmarkMetric),
   statistics: BenchmarkStatistics.optional(),
   error: z.string().optional(),
-  metadata: z.record(z.unknown()).default({}),
+  metadata: z.record(z.string(), z.unknown()).prefault({}),
 });
 export type BenchmarkResult = z.infer<typeof BenchmarkResult>;
 
@@ -70,20 +70,20 @@ export const BenchmarkConfig = z.object({
       sampleThreshold: z.number().int().positive().default(10_000),
       histogramBins: z.number().int().positive().default(200),
     })
-    .default({}),
+    .prefault({}),
   http: z
     .object({
       concurrencyLimit: z.number().int().positive().optional(),
       batchSize: z.number().int().positive().default(1),
     })
-    .default({}),
+    .prefault({}),
   thresholds: z
     .object({
       minThroughput: z.number().optional(),
       maxLatencyMs: z.number().optional(),
       maxErrorRate: z.number().min(0).max(1).optional(),
     })
-    .default({}),
+    .prefault({}),
 });
 export type BenchmarkConfig = z.infer<typeof BenchmarkConfig>;
 
@@ -128,7 +128,7 @@ export type BenchmarkReport = z.infer<typeof BenchmarkReport>;
 export const LoadTestConfig = z.object({
   targetUrl: z.string().url(),
   method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH']).default('GET'),
-  headers: z.record(z.string()).default({}),
+  headers: z.record(z.string(), z.string()).prefault({}),
   body: z.unknown().optional(),
   concurrency: z.number().int().positive().default(10),
   durationMs: z.number().positive().default(30000),
@@ -153,7 +153,7 @@ export const LoadTestResult = z.object({
     p99: z.number(),
     stdDev: z.number(),
   }),
-  statusCodes: z.record(z.number().int()),
+  statusCodes: z.record(z.string(), z.number().int()),
   errors: z.array(
     z.object({
       message: z.string(),

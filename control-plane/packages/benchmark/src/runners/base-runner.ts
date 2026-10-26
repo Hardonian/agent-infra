@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { BenchmarkConfig, BenchmarkResult } from '../contracts/index.js';
 import { LoadGenerator } from '../load-generator.js';
 
@@ -27,7 +28,7 @@ export abstract class BenchmarkRunner {
     status: 'passed' | 'failed' | 'skipped' = 'passed'
   ): BenchmarkResult {
     return {
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       name: config.name,
       description: config.description,
       suite: config.suite,
