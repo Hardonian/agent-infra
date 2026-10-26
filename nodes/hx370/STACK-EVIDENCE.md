@@ -63,10 +63,30 @@ This closes the Milestone 4 "crash/restart recovers" and Milestone 2 "authoritat
 for the authoritative control-plane entities. Reproduce: `docker run -d …postgres:16-alpine` then
 `DATABASE_URL=… ./bin/agentmesh-controller` (see Reproduce block).
 
-## Gap 2 — fenced-worker enrollment is NOT wired (HX370 acceptance #5)
-`cmd/agentmesh-worker/main.go` is a **stub**: it only logs `"Worker heartbeat…"` every 10s on a ticker; it does not register, claim, or fence. `internal/fleet.Manager` is an **in-memory registry of proxy instances** (health/config-version/canary) — not durable job leases with fencing tokens. `internal/reliability` has real `ExecuteWithRetry(ctx, IdempotencyClass, …)` + `CircuitBreaker` primitives (tests pass), but there is **no durable lease store or fencing-token comparison at an effect boundary**.
-- **Consequence:** genuine "stale worker cannot commit after reassignment" fencing + lease-expiry job claims are **not implemented**; only the design concepts + isolated primitives exist.
-- **To make real:** a durable lease table (Postgres), worker enrollment issuing short-lived creds, heartbeat/lease-expiry, and a fencing-token check inside the effect-commit path. Requires Gap 1's durable store first.
+## Gap 2 — fenced-worker enrollment: CLOSED (Milestone 4 / HX370 acceptance #5)
+Previously `agentmesh-worker` was a logging stub and `fleet.Manager` an in-memory proxy registry —
+no durable job leases or fencing. **Now implemented and verified:**
+- **`migrations/000007_worker_leases.up.sql`**: `workers` + `job_leases` tables, a `fencing_seq`
+  SEQUENCE (monotonic token source), and a unique idempotency index (one effect per logical request).
+- **`internal/worker/`**: a `Store` interface with **in-memory and Postgres** implementations that both
+  enforce the fencing invariant. `ClaimJob`/`ClaimNextJob` **atomically bump `fencing_token`** on every
+  claim/reassignment (Postgres: `UPDATE … SET fencing_token=nextval('fencing_seq') … RETURNING`);
+  `CommitFenced` **only succeeds for the current holder with the current token** (effect-boundary check).
+- **Controller endpoints** (`/api/v1/workers/enroll`, `/workers/{id}/heartbeat`, `/jobs`, `/jobs/{id}/claim`,
+  `/jobs/claim-next`, `/jobs/{id}/heartbeat`, `/jobs/{id}/commit`) with precise fencing error codes
+  (409 `STALE_LEASE`/`NOT_LEASE_HOLDER`/`NOT_CLAIMABLE`). Durable worker store shares the Postgres pool.
+- **`cmd/agentmesh-worker`**: rewritten from a stub into a **real fenced execution client**
+  (enroll → claim-next → process → fenced commit → heartbeat; a stale commit is a 409 and it moves on).
+
+**Verified (three independent layers):**
+| Layer | Evidence |
+|---|---|
+| In-memory fencing unit tests | 4 tests PASS: stale-worker-after-reassignment refused, duplicate enqueue collapses, live lease not stealable, renew requires current token |
+| **Real-Postgres fencing integration test** | `TestFencing_Postgres` PASS (1.4s): atomic token bump A=3→B=4, stale A commit refused, B commit DONE, duplicate collapse |
+| **Live E2E on HX370** (durable controller) | A claims token3 → B blocked while live (409) → after expiry B claims token4 → stale A commit **409 NOT_LEASE_HOLDER** → B commit **200 DONE**, job durable in SQL; **real worker binary** enrolled (ONLINE) + committed a job end-to-end (DONE) |
+
+This closes HX370 acceptance #5 (lease fencing, duplicate prevention, reassignment safety) and the
+storage/coordination half of Milestone 4. Full suite: **46 packages ok**, build/vet clean.
 
 ## Reproduce
 ```
