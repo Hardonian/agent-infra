@@ -50,19 +50,15 @@ only.
 
 | Shared milestone | Existing building block (inspected) | Status this session |
 |---|---|---|
-| 1 Identity + authorization (trusted context, OBO, approvals, revocation) | `agent-mesh/identity` (OIDC, workload identity), `policy`, `approval`, `delegation` | **unit tests pass** (`go test` ok, exit 0); E2E/adversarial acceptance untested |
-| 2 Scoped memory + knowledge lifecycle | (no dedicated scoped-memory store found in repo; Qdrant not wired) | **missing / proposed** |
-| 3 Execution isolation + credential broker | `mcpwall` (sandbox.rs, policy firewall); no full secret-broker found | **partial, untested** |
-| 4 Durable background execution (jobs, leases, fencing, budgets) | `agent-mesh/events`, `fleet`, `budgets`, `reliability` | **unit tests pass** (`go test` ok, exit 0); crash/restart-recovery E2E untested |
-| 5 Private interface + run evidence | `agent-mesh/web`, `audit`, `analytics`; Hermes gateway | **exists, untested** |
+| 1 Identity + authorization (trusted context, OBO, approvals, revocation) | `agent-mesh/identity`, `policy`, `approval`, `delegation`; live controller | **VERIFIED live** — agent registration (201), tenant isolation, default-deny/explicit-allow/explicit-deny policy, hash-chained audit (see `STACK-EVIDENCE.md`); unit suites pass |
+| 2 Scoped memory + knowledge lifecycle | no durable store; `database.Store` in-memory | **missing** — in-memory only, state lost on restart; Qdrant not wired |
+| 3 Execution isolation + credential broker | `mcpwall` (sandbox.rs, policy firewall) | **partial, untested** — not exercised this session |
+| 4 Durable background execution (jobs, leases, fencing, budgets) | `events`, `budgets`, `reliability` (ExecuteWithRetry+IdempotencyClass+CircuitBreaker) | **primitives pass; durable store GAP** — restart loses state (in-memory); fenced-worker enrollment not wired (`agentmesh-worker` is a stub) |
+| 5 Private interface + run evidence | controller API, `audit` (hash-chained), `traces`, `/metrics` | **VERIFIED live** — healthz/readyz/metrics 200, append-only tamper-evident audit, cross-tenant isolation (see `STACK-EVIDENCE.md`) |
 | 6 Workflows (repo-maint / ops-brief / research) | built on Hermes + this node's capabilities | **partial (this node only)** |
 | 7 tsrs pilot | see `tsrs-pilot.md` | **evaluated** |
 
-**Conclusion:** The shared infrastructure's identity/fleet/policy/approval **unit suites pass**, but
-full milestone acceptance requires a running stack (Postgres/Redis/Qdrant), a deployed agent-mesh,
-and adversarial/E2E runs across follow-on sessions. This session delivered the HX370 node commission
-completely and honestly mapped + unit-tested the shared building blocks; it does **not** claim
-full-stack completion.
+**Conclusion:** agent-mesh was **built, fully tested (41 pkg + 35-pt DoD + 15 red-team all ok), deployed live on HX370, and exercised end-to-end over HTTP** for Milestones 1 and 5 (identity/authz + private interface/run-evidence) — verified, not just unit-tested. **Milestones 2 and 4 are blocked by a genuine gap: persistence is in-memory only** (no SQL driver anywhere; restart loses state; `/readyz` hardcoded), so durable memory + crash-recovering jobs + fenced-worker enrollment are **not implemented**. Postgres/Redis/Qdrant were deliberately **not** started because agent-mesh does not consume them. See `STACK-EVIDENCE.md` for the exact evidence and the wiring required to close the gaps. This does **not** claim full-stack completion.
 
 ## Verification commands
 ```
