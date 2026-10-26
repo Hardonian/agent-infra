@@ -59,6 +59,9 @@ func NewPostgresStore(ctx context.Context, dsn, migrationsDir string) (*Postgres
 // Ping reports backend reachability (used by /readyz).
 func (p *PostgresStore) Ping(ctx context.Context) error { return p.pool.Ping(ctx) }
 
+// Pool exposes the connection pool so sibling durable stores (e.g. worker leases) can share it.
+func (p *PostgresStore) Pool() *pgxpool.Pool { return p.pool }
+
 // Close releases the connection pool.
 func (p *PostgresStore) Close() { p.pool.Close() }
 

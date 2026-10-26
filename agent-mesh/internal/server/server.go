@@ -34,6 +34,7 @@ import (
 	"github.com/agentmesh/agentmesh/internal/shadow"
 	"github.com/agentmesh/agentmesh/internal/slo"
 	"github.com/agentmesh/agentmesh/internal/telemetry"
+	"github.com/agentmesh/agentmesh/internal/worker"
 	"github.com/agentmesh/agentmesh/pkg/contracts"
 	"github.com/agentmesh/agentmesh/pkg/graph"
 	"github.com/agentmesh/agentmesh/pkg/passport"
@@ -75,12 +76,17 @@ type Server struct {
 	reconcileEng       *reconcile.Engine
 	// readyCheck, when set, is consulted by /readyz to report dependency readiness (e.g. DB ping).
 	readyCheck func(ctx context.Context) error
+	// workerStore backs durable fenced-worker enrollment + job leases (Gap 2).
+	workerStore worker.Store
 }
 
 // SetReadyCheck registers a dependency readiness probe invoked by /readyz. A non-nil error puts
 // the instance OUT OF the ready state (HTTP 503) with the reason, so a failed critical dependency
 // yields an actionable unavailable response rather than a silent ready.
 func (s *Server) SetReadyCheck(fn func(ctx context.Context) error) { s.readyCheck = fn }
+
+// SetWorkerStore injects the durable worker/lease backend (defaults to in-memory).
+func (s *Server) SetWorkerStore(ws worker.Store) { s.workerStore = ws }
 
 func NewServer(
 	store database.Store,
@@ -95,6 +101,7 @@ func NewServer(
 	s := &Server{
 		router:             chi.NewRouter(),
 		store:              store,
+		workerStore:        worker.NewMemoryStore(),
 		policyEng:          polEngine,
 		routerEng:          routeEngine,
 		telemetry:          tel,
@@ -186,6 +193,15 @@ func (s *Server) setupRoutes() {
 		// Agents
 		api.Post("/agents", s.handleRegisterAgent)
 		api.Get("/agents", s.handleListAgents)
+
+		// Durable fenced-worker enrollment + job leases (Gap 2)
+		api.Post("/workers/enroll", s.handleEnrollWorker)
+		api.Post("/workers/{id}/heartbeat", s.handleWorkerHeartbeat)
+		api.Post("/jobs", s.handleEnqueueJob)
+		api.Post("/jobs/{id}/claim", s.handleClaimJob)
+		api.Post("/jobs/claim-next", s.handleClaimNextJob)
+		api.Post("/jobs/{id}/heartbeat", s.handleJobHeartbeat)
+		api.Post("/jobs/{id}/commit", s.handleCommitJob)
 		api.Get("/agents/{id}", s.handleGetAgent)
 		api.Delete("/agents/{id}", s.handleDeleteAgent)
 

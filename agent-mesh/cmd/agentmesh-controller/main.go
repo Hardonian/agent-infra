@@ -20,6 +20,7 @@ import (
 	"github.com/agentmesh/agentmesh/internal/routing"
 	"github.com/agentmesh/agentmesh/internal/server"
 	"github.com/agentmesh/agentmesh/internal/telemetry"
+	"github.com/agentmesh/agentmesh/internal/worker"
 )
 
 func buildControllerServer(cfg *config.AppConfig) (*server.Server, func(), error) {
@@ -108,6 +109,8 @@ func buildControllerServer(cfg *config.AppConfig) (*server.Server, func(), error
 	)
 	if pgStore != nil {
 		srv.SetReadyCheck(func(ctx context.Context) error { return pgStore.Ping(ctx) })
+		// Durable fenced-worker leases share the same Postgres pool.
+		srv.SetWorkerStore(worker.NewPostgresStore(pgStore.Pool()))
 	}
 	return srv, closeFn, nil
 }
