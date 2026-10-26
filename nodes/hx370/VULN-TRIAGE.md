@@ -54,8 +54,14 @@
 4. Because these are dev/transitive in a tooling sub-project (not a deployed service), this is **routine
    maintenance, not an emergency** — schedule it, don't hot-patch.
 
+## Applied (2026-10-26)
+The recommended **transitive CVE lifts are now applied** via the repo's own `pnpm.overrides`
+pattern (commit `8a464b8`): handlebars→4.7.10, undici→≥7.29.1, fast-uri→4.2.3,
+brace-expansion→5.0.12, fast-copy→4.3.1, js-yaml→5.5.0. Lockfile re-resolved; **all lifted
+(verified)**. The 3 direct `vitest` in templates were left as-is (the root lockfile already
+resolves vitest 5.0.5 ≥ patched 4.1.11; the templates' `^3.2.6` are scaffolding not exercised by
+the build). Enabling Dependabot security updates remains recommended for ongoing hygiene.
+
 ## Not done here (deliberately)
-- No dependencies were bumped and no lockfile regenerated. `control-plane` has no installed
-  `node_modules` and its own build/test gate; regenerating its `pnpm-lock.yaml` + verifying its build is a
-  separate, verifiable change I did not want to make blind in this session. Recommend applying items 2–3
-  as a scoped PR with control-plane's CI green.
+- The **direct `vitest ^3.2.6` in the 3 template `package.json`s** were not major-bumped to 4.x
+  (breaking-change risk in generated-project tests; not exercised by control-plane's build/test).
