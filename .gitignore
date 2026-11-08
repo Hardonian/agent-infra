@@ -26,3 +26,4 @@ build/
 *.dylib
 # Regenerable build artifacts (do not track)
 .next/
+__pycache__/
