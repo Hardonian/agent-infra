@@ -1,6 +1,6 @@
 {
   "schema": "hx370.node-profile/v1",
-  "observed_at": "2026-11-08T01:30:30Z",
+  "observed_at": "2026-11-08T23:25:31Z",
   "node_identity": {
     "enrollment_id": "hx370-dev-01",
     "hostname": "HX370",
@@ -21,7 +21,7 @@
   },
   "memory": {
     "total_gb_visible": 19.5,
-    "available_kb": 15551020,
+    "available_kb": 16715464,
     "swap_total_kb": 18628428,
     "note": "WSL-visible; integrated GPU shares system memory (not independent)"
   },
@@ -29,7 +29,7 @@
     "repo_mount": "/home/scott",
     "repo_fs_type": "ext4",
     "repo_fs_size": "1007G",
-    "repo_fs_avail": "788G",
+    "repo_fs_avail": "786G",
     "fs_gate": "pass",
     "fs_gate_evidence": "write+fsync+readback+delete round-trip OK on ext4 at /home/scott"
   },
@@ -48,7 +48,7 @@
     "cargo": true, "powershell_interop": true
   },
   "resource_policy": {
-    "load1": 1.32,
+    "load1": 0.39,
     "build_workers": 2,
     "mem_headroom_gb": 15.5,
     "on_battery": "unknown",
