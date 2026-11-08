@@ -1,6 +1,6 @@
 {
   "schema": "hx370.node-profile/v1",
-  "observed_at": "2026-10-26T13:35:54Z",
+  "observed_at": "2026-11-08T01:30:30Z",
   "node_identity": {
     "enrollment_id": "hx370-dev-01",
     "hostname": "HX370",
@@ -21,7 +21,7 @@
   },
   "memory": {
     "total_gb_visible": 19.5,
-    "available_kb": 17597792,
+    "available_kb": 15551020,
     "swap_total_kb": 18628428,
     "note": "WSL-visible; integrated GPU shares system memory (not independent)"
   },
@@ -29,14 +29,14 @@
     "repo_mount": "/home/scott",
     "repo_fs_type": "ext4",
     "repo_fs_size": "1007G",
-    "repo_fs_avail": "826G",
+    "repo_fs_avail": "788G",
     "fs_gate": "pass",
     "fs_gate_evidence": "write+fsync+readback+delete round-trip OK on ext4 at /home/scott"
   },
   "acceleration": {
     "gpu_visible": true,
     "gpu_model": "AMD Radeon(TM) 890M Graphics",
-    "gpu_compute_api": "none",
+    "gpu_compute_api": "rocm-present-unverified",
     "gpu_compute_verified": false,
     "npu_visible": "no",
     "npu_compute_verified": false,
@@ -48,7 +48,7 @@
     "cargo": true, "powershell_interop": true
   },
   "resource_policy": {
-    "load1": 0.27,
+    "load1": 1.32,
     "build_workers": 2,
     "mem_headroom_gb": 15.5,
     "on_battery": "unknown",
@@ -57,7 +57,8 @@
   "routing": {
     "remote_epyc": "reachable",
     "remote_ssh_port_22": "open",
-    "remote_app_port_4000": "closed",
+    "remote_app_port_probe": "none",
+    "remote_app_port_status": "not-probed",
     "remote_host_role": "sustained inference / always-on shared services (verify, do not assume)",
     "local_inference_gateway": "healthy",
     "policy": "private local endpoints default; remote requires verified auth; no provider fallback when offline"

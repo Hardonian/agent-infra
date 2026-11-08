@@ -24,7 +24,7 @@ LOG_PATH="${SCRIPT_DIR}/hx370-doctor.log"
 REPO_ROOT_DEFAULT="/home/scott"
 REPO_MOUNT="${HX370_REPO_MOUNT:-$REPO_ROOT_DEFAULT}"
 REMOTE_HOST="${HX370_REMOTE_PROBE_HOST:-100.127.74.34}"   # EPYC tailscale addr (override via env)
-REMOTE_PROBE_PORT="${HX370_REMOTE_PROBE_PORT:-4000}"       # historical litellm port; override via env
+REMOTE_PROBE_PORT="${HX370_REMOTE_PROBE_PORT:-}"           # optional app-port probe; EPYC normally exposes only ssh22 over tailscale (app services sit behind on-demand tunnels). Set HX370_REMOTE_PROBE_PORT=8020 (etc.) to probe one.
 PROBE_TIMEOUT="${HX370_PROBE_TIMEOUT:-6}"                 # bounded; seconds
 WRITE_PROFILE=1
 JSON_ONLY=0
@@ -108,10 +108,17 @@ if command -v powershell.exe >/dev/null 2>&1; then
   GPU_MODEL="$(powershell.exe -NoProfile -Command "(Get-CimInstance Win32_VideoController | Select-Object -First 1).Name" 2>/dev/null | tr -d '\r' | head -1)"
   [[ -z "$GPU_MODEL" ]] && GPU_MODEL="unknown"
 fi
-# A compute API is only claimed if a real runtime tool exists AND a probe op succeeds. We do not
-# install anything; we only detect. Absence => CPU/remote fallback.
+# Tool presence is not compute evidence. Check PATH and the known user-space pip ROCm
+# venv without activating it; an executable alone remains explicitly unverified.
 if command -v rocminfo >/dev/null 2>&1 || command -v hipcc >/dev/null 2>&1; then
   GPU_COMPUTE_API="rocm-present-unverified"
+else
+  for tool in "$HOME"/.local/share/rocm-wsl-venv/lib/python*/site-packages/_rocm_sdk_core/bin/{rocminfo,hipcc}; do
+    if [[ -x "$tool" && ! -d "$tool" ]]; then
+      GPU_COMPUTE_API="rocm-present-unverified"
+      break
+    fi
+  done
 fi
 NPU_VISIBLE="no"
 ls /dev/accel* >/dev/null 2>&1 && NPU_VISIBLE="yes"
@@ -140,7 +147,10 @@ fi
 tcp_probe(){ timeout "$PROBE_TIMEOUT" bash -c "exec 3<>/dev/tcp/$1/$2" 2>/dev/null && echo open || echo closed; }
 REMOTE_STATUS="unknown"
 REMOTE_SSH_PORT="$(tcp_probe "$REMOTE_HOST" 22)"
-REMOTE_APP_PORT="$(tcp_probe "$REMOTE_HOST" "$REMOTE_PROBE_PORT")"
+REMOTE_APP_PORT="not-probed"
+if [[ -n "$REMOTE_PROBE_PORT" ]]; then
+  REMOTE_APP_PORT="$(tcp_probe "$REMOTE_HOST" "$REMOTE_PROBE_PORT")"
+fi
 if [[ "$REMOTE_SSH_PORT" == "open" ]]; then
   REMOTE_STATUS="reachable"
 elif command -v tailscale >/dev/null 2>&1 && timeout "$PROBE_TIMEOUT" tailscale status >/dev/null 2>&1; then
@@ -223,7 +233,8 @@ read -r -d '' PROFILE_JSON <<JSONEOF || true
   "routing": {
     "remote_epyc": "${REMOTE_STATUS}",
     "remote_ssh_port_22": "${REMOTE_SSH_PORT}",
-    "remote_app_port_${REMOTE_PROBE_PORT}": "${REMOTE_APP_PORT}",
+    "remote_app_port_probe": "${REMOTE_PROBE_PORT:-none}",
+    "remote_app_port_status": "${REMOTE_APP_PORT}",
     "remote_host_role": "sustained inference / always-on shared services (verify, do not assume)",
     "local_inference_gateway": "${LOCAL_GW}",
     "policy": "private local endpoints default; remote requires verified auth; no provider fallback when offline"
@@ -249,7 +260,7 @@ summary() {
   printf '  gpu            : visible=%s (%s) compute=%s (verified=no)\n' "$GPU_VISIBLE" "${GPU_MODEL:-?}" "$GPU_COMPUTE_API"
   printf '  npu            : %s (verified=no)\n' "$NPU_VISIBLE"
   printf '  resource policy: build_workers=%s mem_headroom=%sGB load1=%s battery=%s\n' "$BUILD_WORKERS" "$MEM_HEADROOM_GB" "${LOAD1:-?}" "${ON_BATTERY}"
-  printf '  remote epyc    : %s (ssh22=%s app:%s=%s, probe timeout %ss)\n' "$REMOTE_STATUS" "$REMOTE_SSH_PORT" "$REMOTE_PROBE_PORT" "$REMOTE_APP_PORT" "$PROBE_TIMEOUT"
+  printf '  remote epyc    : %s (ssh22=%s app:%s=%s, probe timeout %ss)\n' "$REMOTE_STATUS" "$REMOTE_SSH_PORT" "${REMOTE_PROBE_PORT:-probe}" "$REMOTE_APP_PORT" "$PROBE_TIMEOUT"
   printf '  local gw :8000 : %s\n' "$LOCAL_GW"
 }
 
