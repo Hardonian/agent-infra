@@ -104,3 +104,33 @@ DATABASE_URL='postgres://agentmesh:agentmesh@127.0.0.1:55433/agentmesh?sslmode=d
 ## Follow-ups (out of this session's scope)
 - 28 GitHub-reported vulnerabilities on the branch default (2 critical, 6 high) — dependabot-tracked, in nested projects; triage separately.
 - ~~Wire durable Postgres store (Gap 1)~~ **DONE** → next: fenced-worker enrollment (Gap 2, needs durable lease table + fencing token at effect boundary) and pinning the audit trail to the durable store (audit.Logger is a separate in-memory service today).
+
+## M3 execution-isolation runtime evidence (2026-11-09, HX370, rootless uid 1000)
+
+`mcpwall/src/sandbox.rs` was previously "partial, untested". New suite
+`mcpwall/tests/sandbox_execution_tests.rs` exercises the **real proxy primitives**
+(`apply_sandbox` + `arm_timeout` + `kill_process_group`) against **real child processes** and asserts
+the observed effect, not config parsing. **12/12 pass: 10 verified rootless, 2 namespace tests
+skip by design without root** (CLONE_NEWNET/CLONE_NEWNS need CAP_SYS_ADMIN — WSL2 kernel allows
+CLONE_NEWUSER, proven via direct `unshare(2)`, but mcpwall deliberately does not create a user ns).
+
+| Control | Rootless proof |
+|---|---|
+| Environment scrub + allowlist | child sees allowlisted `PATH`; `HOME` + planted secret var scrubbed |
+| Allowlist misuse | `environment_allowlist` without `clear_environment` → rejected before exec |
+| working_dir | child `pwd` == policy dir; missing dir → error before spawn |
+| seccomp | child `/proc/self/status`: `Seccomp: 2` + `NoNewPrivs: 1`; `unshare(2)` → **EPERM** inside sandbox, **succeeds** unsandboxed (control proves the filter caused it) |
+| RLIMIT_NOFILE / RLIMIT_AS | child `ulimit -n` = 64, `ulimit -v` = 524288 KB as configured |
+| RLIMIT_FSIZE | `dd` past 4 KiB limit terminated by SIGXFSZ (rc 153) |
+| RLIMIT_CPU | busy loop terminated by SIGXCPU within limits |
+| Timeout watchdog | `sleep 30 \| cat &` pipeline group SIGKILLed by `arm_timeout` in <10 s |
+| kill_process_group | idempotent after child exit, no panic |
+| uid/gid pairing | unpaired `run_as_uid` → spawn fails EINVAL (pre_exec aborts before exec) |
+
+Full `cargo test`: **21 lib + 18 firewall + 12 execution = 51 passed, 0 failed** on
+mcpwall v1.0.5 (WSL2 kernel 6.18.33.1, x86_64).
+Reproduce: `cd mcpwall && cargo test --test sandbox_execution_tests`.
+**Remaining (honest):** the two namespace controls (netns isolation, RO rootfs) need a privileged
+runner to execute; the code path compiles and is structurally tested (`validate_sandbox_policy`
+rejects `read_only_filesystem` without `mount_namespace`) but runtime proof is root-gated.
+
