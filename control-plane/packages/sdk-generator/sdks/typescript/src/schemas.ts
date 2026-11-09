@@ -298,8 +298,8 @@ export type JobMetadata = z.infer<typeof JobMetadataSchema>;
 export const JobPayloadSchema = z.object({
   type: z.string(),
   version: z.string().default('1.0.0'),
-  data: z.record(z.unknown()),
-  options: z.record(z.unknown()).default({}),
+  data: z.record(z.string(), z.unknown()),
+  options: z.record(z.string(), z.unknown()).default({}),
 });
 
 /**
@@ -318,8 +318,8 @@ export const JobRequestSchema = z.object({
   payload: z.object({
     type: z.string(),
     version: z.string().default('1.0.0'),
-    data: z.record(z.unknown()),
-    options: z.record(z.unknown()).default({}),
+    data: z.record(z.string(), z.unknown()),
+    options: z.record(z.string(), z.unknown()).default({}),
   }),
   metadata: z.object({
     source: z.string(),
@@ -484,8 +484,8 @@ export const JobResponseSchema = z.object({
     payload: z.object({
       type: z.string(),
       version: z.string().default('1.0.0'),
-      data: z.record(z.unknown()),
-      options: z.record(z.unknown()).default({}),
+      data: z.record(z.string(), z.unknown()),
+      options: z.record(z.string(), z.unknown()).default({}),
     }),
     metadata: z.object({
       source: z.string(),
@@ -686,8 +686,8 @@ export const RunnerCapabilitySchema = z.object({
   name: z.string(),
   version: z.string(),
   description: z.string(),
-  inputSchema: z.record(z.unknown()),
-  outputSchema: z.record(z.unknown()),
+  inputSchema: z.record(z.string(), z.unknown()),
+  outputSchema: z.record(z.string(), z.unknown()),
   supportedJobTypes: z.array(z.string()),
   maxConcurrency: z.number().int().default(1),
   timeoutMs: z.number().default(30000),
@@ -725,8 +725,8 @@ export const RunnerMetadataSchema = z.object({
       name: z.string(),
       version: z.string(),
       description: z.string(),
-      inputSchema: z.record(z.unknown()),
-      outputSchema: z.record(z.unknown()),
+      inputSchema: z.record(z.string(), z.unknown()),
+      outputSchema: z.record(z.string(), z.unknown()),
       supportedJobTypes: z.array(z.string()),
       maxConcurrency: z.number().int().default(1),
       timeoutMs: z.number().default(30000),
@@ -771,8 +771,8 @@ export const RunnerRegistrationRequestSchema = z.object({
       name: z.string(),
       version: z.string(),
       description: z.string(),
-      inputSchema: z.record(z.unknown()),
-      outputSchema: z.record(z.unknown()),
+      inputSchema: z.record(z.string(), z.unknown()),
+      outputSchema: z.record(z.string(), z.unknown()),
       supportedJobTypes: z.array(z.string()),
       maxConcurrency: z.number().int().default(1),
       timeoutMs: z.number().default(30000),
@@ -855,8 +855,8 @@ export const ModuleManifestSchema = z.object({
       name: z.string(),
       version: z.string(),
       description: z.string(),
-      inputSchema: z.record(z.unknown()),
-      outputSchema: z.record(z.unknown()),
+      inputSchema: z.record(z.string(), z.unknown()),
+      outputSchema: z.record(z.string(), z.unknown()),
       supportedJobTypes: z.array(z.string()),
       maxConcurrency: z.number().int().default(1),
       timeoutMs: z.number().default(30000),
@@ -870,8 +870,8 @@ export const ModuleManifestSchema = z.object({
     })
   ),
   dependencies: z.array(z.string()).default([]),
-  configSchema: z.record(z.unknown()).optional(),
-  defaultConfig: z.record(z.unknown()).default({}),
+  configSchema: z.record(z.string(), z.unknown()).optional(),
+  defaultConfig: z.record(z.string(), z.unknown()).default({}),
 });
 
 /**
@@ -887,7 +887,7 @@ export const RunnerExecutionRequestSchema = z.object({
   jobId: z.string().uuid(),
   moduleId: z.string(),
   capabilityId: z.string(),
-  payload: z.record(z.unknown()),
+  payload: z.record(z.string(), z.unknown()),
   timeoutMs: z.number().default(30000),
   metadata: z
     .object({
@@ -980,13 +980,13 @@ export const TruthAssertionSchema = z.object({
     z.boolean(),
     z.null(),
     z.array(z.unknown()),
-    z.record(z.unknown()),
+    z.record(z.string(), z.unknown()),
   ]),
   confidence: z.number().min(0).max(1).default(1),
   timestamp: z.string().datetime(),
   source: z.string(),
   expiresAt: z.string().datetime().optional(),
-  metadata: z.record(z.unknown()).default({}),
+  metadata: z.record(z.string(), z.unknown()).default({}),
 });
 
 /**
@@ -1010,7 +1010,7 @@ export const TruthQuerySchema = z.object({
         z.boolean(),
         z.null(),
         z.array(z.unknown()),
-        z.record(z.unknown()),
+        z.record(z.string(), z.unknown()),
       ])
       .optional(),
   }),
@@ -1048,13 +1048,13 @@ export const TruthQueryResultSchema = z.object({
         z.boolean(),
         z.null(),
         z.array(z.unknown()),
-        z.record(z.unknown()),
+        z.record(z.string(), z.unknown()),
       ]),
       confidence: z.number().min(0).max(1).default(1),
       timestamp: z.string().datetime(),
       source: z.string(),
       expiresAt: z.string().datetime().optional(),
-      metadata: z.record(z.unknown()).default({}),
+      metadata: z.record(z.string(), z.unknown()).default({}),
     })
   ),
   totalCount: z.number().int().min(0),
@@ -1083,7 +1083,7 @@ export const TruthSubscriptionSchema = z.object({
         z.boolean(),
         z.null(),
         z.array(z.unknown()),
-        z.record(z.unknown()),
+        z.record(z.string(), z.unknown()),
       ])
       .optional(),
   }),
@@ -1108,7 +1108,7 @@ export type TruthSubscription = z.infer<typeof TruthSubscriptionSchema>;
 export const TruthCoreRequestSchema = z.object({
   id: z.string().uuid(),
   type: z.enum(['assert', 'query', 'subscribe', 'unsubscribe']),
-  payload: z.record(z.unknown()),
+  payload: z.record(z.string(), z.unknown()),
   metadata: z.object({
     correlationId: z.string().uuid().optional(),
     source: z.string(),
@@ -1205,7 +1205,7 @@ export const TruthValueSchema = z.union([
   z.boolean(),
   z.null(),
   z.array(z.unknown()),
-  z.record(z.unknown()),
+  z.record(z.string(), z.unknown()),
 ]);
 
 /**
@@ -1312,8 +1312,8 @@ export const ApiRequestSchema = z.object({
   id: z.string().uuid(),
   method: z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']),
   path: z.string(),
-  headers: z.record(z.string()).default({}),
-  query: z.record(z.unknown()).default({}),
+  headers: z.record(z.string(), z.string()).default({}),
+  query: z.record(z.string(), z.unknown()).default({}),
   body: z.unknown(),
   metadata: z.object({
     correlationId: z.string().uuid().optional(),
@@ -1334,7 +1334,7 @@ export type ApiRequest = z.infer<typeof ApiRequestSchema>;
 export const ApiResponseSchema = z.object({
   requestId: z.string().uuid(),
   statusCode: z.number().int().min(100).max(599),
-  headers: z.record(z.string()).default({}),
+  headers: z.record(z.string(), z.string()).default({}),
   body: z.unknown(),
   error: z
     .object({
@@ -1459,8 +1459,8 @@ export const CapabilityRegistrySchema = z.object({
             name: z.string(),
             version: z.string(),
             description: z.string(),
-            inputSchema: z.record(z.unknown()),
-            outputSchema: z.record(z.unknown()),
+            inputSchema: z.record(z.string(), z.unknown()),
+            outputSchema: z.record(z.string(), z.unknown()),
             supportedJobTypes: z.array(z.string()),
             maxConcurrency: z.number().int().default(1),
             timeoutMs: z.number().default(30000),
@@ -1503,8 +1503,8 @@ export const CapabilityRegistrySchema = z.object({
           name: z.string(),
           version: z.string(),
           description: z.string(),
-          inputSchema: z.record(z.unknown()),
-          outputSchema: z.record(z.unknown()),
+          inputSchema: z.record(z.string(), z.unknown()),
+          outputSchema: z.record(z.string(), z.unknown()),
           supportedJobTypes: z.array(z.string()),
           maxConcurrency: z.number().int().default(1),
           timeoutMs: z.number().default(30000),
@@ -1536,7 +1536,7 @@ export const CapabilityRegistrySchema = z.object({
         ]),
         version: z.string(),
         description: z.string(),
-        configSchema: z.record(z.unknown()),
+        configSchema: z.record(z.string(), z.unknown()),
         required: z.boolean().default(false),
         healthCheckable: z.boolean().default(true),
       }),
@@ -1544,7 +1544,7 @@ export const CapabilityRegistrySchema = z.object({
       lastConnectedAt: z.string().datetime().optional(),
       lastErrorAt: z.string().datetime().optional(),
       errorMessage: z.string().optional(),
-      metadata: z.record(z.unknown()).default({}),
+      metadata: z.record(z.string(), z.unknown()).default({}),
     })
   ),
   summary: z.object({
@@ -1553,7 +1553,7 @@ export const CapabilityRegistrySchema = z.object({
     totalConnectors: z.number().int().min(0),
     healthyRunners: z.number().int().min(0),
     healthyConnectors: z.number().int().min(0),
-    categories: z.record(z.number().int().min(0)),
+    categories: z.record(z.string(), z.number().int().min(0)),
   }),
 });
 
@@ -1583,8 +1583,8 @@ export const RegisteredRunnerSchema = z.object({
         name: z.string(),
         version: z.string(),
         description: z.string(),
-        inputSchema: z.record(z.unknown()),
-        outputSchema: z.record(z.unknown()),
+        inputSchema: z.record(z.string(), z.unknown()),
+        outputSchema: z.record(z.string(), z.unknown()),
         supportedJobTypes: z.array(z.string()),
         maxConcurrency: z.number().int().default(1),
         timeoutMs: z.number().default(30000),
@@ -1627,8 +1627,8 @@ export const RegisteredRunnerSchema = z.object({
       name: z.string(),
       version: z.string(),
       description: z.string(),
-      inputSchema: z.record(z.unknown()),
-      outputSchema: z.record(z.unknown()),
+      inputSchema: z.record(z.string(), z.unknown()),
+      outputSchema: z.record(z.string(), z.unknown()),
       supportedJobTypes: z.array(z.string()),
       maxConcurrency: z.number().int().default(1),
       timeoutMs: z.number().default(30000),
@@ -1658,7 +1658,7 @@ export const ConnectorConfigSchema = z.object({
   type: z.enum(['database', 'queue', 'storage', 'api', 'webhook', 'stream', 'cache', 'messaging']),
   version: z.string(),
   description: z.string(),
-  configSchema: z.record(z.unknown()),
+  configSchema: z.record(z.string(), z.unknown()),
   required: z.boolean().default(false),
   healthCheckable: z.boolean().default(true),
 });
@@ -1708,7 +1708,7 @@ export const ConnectorInstanceSchema = z.object({
     ]),
     version: z.string(),
     description: z.string(),
-    configSchema: z.record(z.unknown()),
+    configSchema: z.record(z.string(), z.unknown()),
     required: z.boolean().default(false),
     healthCheckable: z.boolean().default(true),
   }),
@@ -1716,7 +1716,7 @@ export const ConnectorInstanceSchema = z.object({
   lastConnectedAt: z.string().datetime().optional(),
   lastErrorAt: z.string().datetime().optional(),
   errorMessage: z.string().optional(),
-  metadata: z.record(z.unknown()).default({}),
+  metadata: z.record(z.string(), z.unknown()).default({}),
 });
 
 /**
@@ -1796,7 +1796,7 @@ export const RegistryDiffSchema = z.object({
     z.object({
       type: z.enum(['runner', 'connector', 'capability']),
       id: z.string(),
-      changes: z.record(
+      changes: z.record(z.string(), 
         z.object({
           old: z.unknown(),
           new: z.unknown(),
@@ -1837,8 +1837,8 @@ export const MarketplaceIndexSchema = z.object({
     verifiedCount: z.number().min(0),
     pendingReviewCount: z.number().min(0),
     deprecatedCount: z.number().min(0),
-    categories: z.record(z.number().min(0)),
-    connectorTypes: z.record(z.number().min(0)),
+    categories: z.record(z.string(), z.number().min(0)),
+    connectorTypes: z.record(z.string(), z.number().min(0)),
   }),
   runners: z.array(
     z.object({
@@ -1859,8 +1859,8 @@ export const MarketplaceIndexSchema = z.object({
             name: z.string(),
             version: z.string(),
             description: z.string(),
-            inputSchema: z.record(z.unknown()),
-            outputSchema: z.record(z.unknown()),
+            inputSchema: z.record(z.string(), z.unknown()),
+            outputSchema: z.record(z.string(), z.unknown()),
             supportedJobTypes: z.array(z.string()),
             maxConcurrency: z.number().int().default(1),
             timeoutMs: z.number().default(30000),
@@ -1920,8 +1920,8 @@ export const MarketplaceIndexSchema = z.object({
           name: z.string(),
           version: z.string(),
           description: z.string(),
-          inputSchema: z.record(z.unknown()),
-          outputSchema: z.record(z.unknown()),
+          inputSchema: z.record(z.string(), z.unknown()),
+          outputSchema: z.record(z.string(), z.unknown()),
           supportedJobTypes: z.array(z.string()),
           maxConcurrency: z.number().int().default(1),
           timeoutMs: z.number().default(30000),
@@ -2084,7 +2084,7 @@ export const MarketplaceIndexSchema = z.object({
         ]),
         version: z.string(),
         description: z.string(),
-        configSchema: z.record(z.unknown()),
+        configSchema: z.record(z.string(), z.unknown()),
         required: z.boolean().default(false),
         healthCheckable: z.boolean().default(true),
       }),
@@ -2112,8 +2112,8 @@ export const MarketplaceIndexSchema = z.object({
         .default({}),
       license: z.string(),
       keywords: z.array(z.string()).default([]),
-      inputSchema: z.record(z.unknown()),
-      outputSchema: z.record(z.unknown()),
+      inputSchema: z.record(z.string(), z.unknown()),
+      outputSchema: z.record(z.string(), z.unknown()),
       compatibility: z.object({
         minContractVersion: z.object({
           major: z.number().int().min(0),
@@ -2279,8 +2279,8 @@ export const MarketplaceRunnerSchema = z.object({
         name: z.string(),
         version: z.string(),
         description: z.string(),
-        inputSchema: z.record(z.unknown()),
-        outputSchema: z.record(z.unknown()),
+        inputSchema: z.record(z.string(), z.unknown()),
+        outputSchema: z.record(z.string(), z.unknown()),
         supportedJobTypes: z.array(z.string()),
         maxConcurrency: z.number().int().default(1),
         timeoutMs: z.number().default(30000),
@@ -2340,8 +2340,8 @@ export const MarketplaceRunnerSchema = z.object({
       name: z.string(),
       version: z.string(),
       description: z.string(),
-      inputSchema: z.record(z.unknown()),
-      outputSchema: z.record(z.unknown()),
+      inputSchema: z.record(z.string(), z.unknown()),
+      outputSchema: z.record(z.string(), z.unknown()),
       supportedJobTypes: z.array(z.string()),
       maxConcurrency: z.number().int().default(1),
       timeoutMs: z.number().default(30000),
@@ -2512,7 +2512,7 @@ export const MarketplaceConnectorSchema = z.object({
     ]),
     version: z.string(),
     description: z.string(),
-    configSchema: z.record(z.unknown()),
+    configSchema: z.record(z.string(), z.unknown()),
     required: z.boolean().default(false),
     healthCheckable: z.boolean().default(true),
   }),
@@ -2540,8 +2540,8 @@ export const MarketplaceConnectorSchema = z.object({
     .default({}),
   license: z.string(),
   keywords: z.array(z.string()).default([]),
-  inputSchema: z.record(z.unknown()),
-  outputSchema: z.record(z.unknown()),
+  inputSchema: z.record(z.string(), z.unknown()),
+  outputSchema: z.record(z.string(), z.unknown()),
   compatibility: z.object({
     minContractVersion: z.object({
       major: z.number().int().min(0),
@@ -2762,8 +2762,8 @@ export const MarketplaceQueryResultSchema = z.object({
               name: z.string(),
               version: z.string(),
               description: z.string(),
-              inputSchema: z.record(z.unknown()),
-              outputSchema: z.record(z.unknown()),
+              inputSchema: z.record(z.string(), z.unknown()),
+              outputSchema: z.record(z.string(), z.unknown()),
               supportedJobTypes: z.array(z.string()),
               maxConcurrency: z.number().int().default(1),
               timeoutMs: z.number().default(30000),
@@ -2823,8 +2823,8 @@ export const MarketplaceQueryResultSchema = z.object({
             name: z.string(),
             version: z.string(),
             description: z.string(),
-            inputSchema: z.record(z.unknown()),
-            outputSchema: z.record(z.unknown()),
+            inputSchema: z.record(z.string(), z.unknown()),
+            outputSchema: z.record(z.string(), z.unknown()),
             supportedJobTypes: z.array(z.string()),
             maxConcurrency: z.number().int().default(1),
             timeoutMs: z.number().default(30000),
@@ -2985,7 +2985,7 @@ export const MarketplaceQueryResultSchema = z.object({
           ]),
           version: z.string(),
           description: z.string(),
-          configSchema: z.record(z.unknown()),
+          configSchema: z.record(z.string(), z.unknown()),
           required: z.boolean().default(false),
           healthCheckable: z.boolean().default(true),
         }),
@@ -3013,8 +3013,8 @@ export const MarketplaceQueryResultSchema = z.object({
           .default({}),
         license: z.string(),
         keywords: z.array(z.string()).default([]),
-        inputSchema: z.record(z.unknown()),
-        outputSchema: z.record(z.unknown()),
+        inputSchema: z.record(z.string(), z.unknown()),
+        outputSchema: z.record(z.string(), z.unknown()),
         compatibility: z.object({
           minContractVersion: z.object({
             major: z.number().int().min(0),
@@ -3147,10 +3147,10 @@ export const MarketplaceQueryResultSchema = z.object({
     ])
   ),
   facets: z.object({
-    categories: z.record(z.number()).default({}),
-    trustLevels: z.record(z.number()).default({}),
-    connectorTypes: z.record(z.number()).default({}),
-    status: z.record(z.number()).default({}),
+    categories: z.record(z.string(), z.number()).default({}),
+    trustLevels: z.record(z.string(), z.number()).default({}),
+    connectorTypes: z.record(z.string(), z.number()).default({}),
+    status: z.record(z.string(), z.number()).default({}),
   }),
 });
 

@@ -219,7 +219,7 @@ function generateZodDefinition(schema: z.ZodTypeAny, depth = 0): string {
       }
 
       case 'ZodRecord':
-        return `z.record(${generateZodDefinition(def.valueType ?? schema, depth)})`;
+        return `z.record(z.string(), ${generateZodDefinition(def.valueType ?? schema, depth)})`;
 
       case 'ZodEnum': {
         const values = (def.values ?? []).map((v) => `'${v}'`).join(', ');

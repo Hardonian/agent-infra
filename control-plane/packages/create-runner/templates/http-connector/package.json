@@ -26,7 +26,7 @@
     "@controlplane/contract-test-kit": "^{{contractVersion}}",
     "eslint": "^8.55.0",
     "typescript": "^5.3.3",
-    "vitest": "^3.2.6"
+    "vitest": "^5.0.5"
   },
   "engines": {
     "node": ">=18.0.0"
