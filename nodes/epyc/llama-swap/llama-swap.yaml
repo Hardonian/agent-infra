@@ -1,0 +1,54 @@
+# llama-swap starter profile for EPYC — authored 2026-11-08, NOT yet deployed.
+# Deploy gate: EPYC SSH-tunnel operator approval (Tailscale SSH interactive).
+# Binary: https://github.com/mostlygeek/llama-swap/releases/download/v271/llama-swap_271_linux_amd64.tar.gz
+# Validate before enabling: llama-swap --check-config <this file>  (and keep current Ollama serving as-is)
+
+# Rationale: EPYC today binds 127.0.0.1 only; Ollama serves the small set that fits
+# comfortably. llama-swap's value here is (a) on-demand loading of large GGUFs that
+# Ollama would keep resident, (b) one OpenAI-compatible endpoint in front of mixed
+# engines (Ollama + llama.cpp), (c) Prometheus metrics + web UI for the lab dashboard.
+# ComfyUI/GPU image routing stays as-is (SDXL -> 3060, SD1.5 -> P40); llama-swap CAN
+# manage ComfyUI profiles too, but that migration is deliberately deferred until the
+# LLM side is proven.
+
+# models:
+#   # Proxy-through: keep existing Ollama as a backend so nothing breaks on cutover.
+#   ollama-passthrough:
+#     type: "proxy"
+#     proxy: "http://127.0.0.1:11434/v1"
+#     model: "all"
+#
+#   # Example on-demand GGUF profile (adjust paths/models to EPYC reality at deploy):
+#   #   32B-class MoE for the 3060 12GB (Q4) loaded only while in use; idle unload after 5m.
+#   big-gguf:
+#     type: "llama.cpp"
+#     config: |
+#       -m: /mnt/models/ggufs/SELECT_AT_DEPLOY.Q4_K_M.gguf
+#       gpu-layers: auto
+#       ctx: 8192
+#       parallel: 2
+#       idle:
+#         ttl: 5m
+#
+# swap:
+#   defaultGroup: big-gguf
+#   matrix:
+#     - [big-gguf]           # one big model resident at a time
+#
+# metrics:
+#   enabled: true            # /metrics for the lab Prometheus/status board
+# ui:
+#   enabled: true            # swap-matrix web UI
+
+# --- Deploy checklist (run AFTER tunnel approval, on EPYC as the service user) ---
+# 1. Download + unpack v271 tar.gz into ~/.local/bin (no sudo; EPYC sudo needs a password anyway).
+# 2. Fill placeholders above with real model paths from the model storage drive
+#    (keep GGUFs on the large storage mount, NOT in the systemd unit dir).
+# 3. llama-swap --check-config llama-swap.yaml  -> must exit 0.
+# 4. systemd user unit: llama-swap --host 127.0.0.1 --port 11435 <config>; Restart=on-failure.
+#    (EPYC binds loopback only — do NOT change --host.)
+# 5. Smoke: curl loopback :11435/v1/models ; one completion through ollama-passthrough;
+#    then one through an on-demand profile; watch /metrics counter move.
+# 6. Repoint ONLY Open WebUI to :11435 first (canary client). Leave every other consumer on
+#    Ollama :11434 until 48h of clean logs.
+# Rollback: stop the user unit, Open WebUI back to :11434. Nothing else was touched.
