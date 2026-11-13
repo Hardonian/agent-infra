@@ -44,8 +44,26 @@ describe('SDK Generator', () => {
       expect(sdk.files.has('src/client.ts')).toBe(true);
       expect(sdk.files.has('src/index.ts')).toBe(true);
       expect(sdk.files.has('src/validation.ts')).toBe(true);
+      expect(sdk.files.has('tsconfig.json')).toBe(true);
+      expect(sdk.files.has('src/tests/schemas.test.ts')).toBe(true);
       expect(sdk.files.has('README.md')).toBe(true);
       expect(sdk.packageConfig.name).toBe('@controlplane/sdk');
+    });
+
+    it('should generate explicit exports for schemas and types', async () => {
+      const schemas = await extractSchemas();
+      const sdk = generateTypeScriptSDK(schemas, DEFAULT_CONFIG);
+      const indexContent = sdk.files.get('src/index.ts');
+
+      expect(indexContent).toContain('export {');
+      expect(indexContent).toContain('ErrorSeveritySchema,');
+      expect(indexContent).toContain('export type {');
+      expect(indexContent).toContain('  ErrorSeverity,');
+      expect(indexContent).not.toContain('export *');
+      for (const schema of schemas) {
+        expect(indexContent).toContain(`  ${schema.name}Schema,`);
+        expect(indexContent).toContain(`  ${schema.name},`);
+      }
     });
 
     it('should generate valid TypeScript schemas with Zod', async () => {

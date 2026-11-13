@@ -22,6 +22,11 @@ export function generateTypeScriptSDK(
   const validationContent = generateValidationFile(schemas);
   files.set('src/validation.ts', validationContent);
 
+  files.set('tsconfig.json', generateTsConfigFile());
+
+  const schemaSmokeTestContent = generateSchemaSmokeTestFile();
+  files.set('src/tests/schemas.test.ts', schemaSmokeTestContent);
+
   const readmeContent = generateReadme('TypeScript', config);
   files.set('README.md', readmeContent);
 
@@ -378,16 +383,24 @@ export class ControlPlaneClient {
 `;
 }
 
-function generateIndexFile(_schemas: SchemaDefinition[]): string {
+function generateIndexFile(schemas: SchemaDefinition[]): string {
   const lines: string[] = [];
   lines.push('// Auto-generated ControlPlane SDK');
   lines.push('// DO NOT EDIT MANUALLY - regenerate from source');
   lines.push('');
-  lines.push('// Export all Zod schemas for runtime validation');
-  lines.push("export * from './schemas.js';");
+  lines.push('// Export Zod schemas for runtime validation');
+  lines.push('export {');
+  for (const schema of schemas) {
+    lines.push(`  ${schema.name}Schema,`);
+  }
+  lines.push("} from './schemas.js';");
   lines.push('');
-  lines.push('// Export all TypeScript types');
-  lines.push("export * from './types.js';");
+  lines.push('// Export TypeScript types');
+  lines.push('export type {');
+  for (const schema of schemas) {
+    lines.push(`  ${schema.name},`);
+  }
+  lines.push("} from './types.js';");
   lines.push('');
   lines.push('// Export client');
   lines.push("export { ControlPlaneClient, type ClientConfig } from './client.js';");
@@ -399,6 +412,43 @@ function generateIndexFile(_schemas: SchemaDefinition[]): string {
   lines.push("export { z } from 'zod';");
 
   return lines.join('\n');
+}
+
+function generateTsConfigFile(): string {
+  return `${JSON.stringify(
+    {
+      compilerOptions: {
+        target: 'ES2022',
+        module: 'NodeNext',
+        moduleResolution: 'NodeNext',
+        strict: true,
+        esModuleInterop: true,
+        skipLibCheck: true,
+        forceConsistentCasingInFileNames: true,
+        rootDir: './src',
+        outDir: './dist',
+      },
+      include: ['src/**/*.ts'],
+      exclude: ['node_modules', 'dist'],
+    },
+    null,
+    2
+  )}\n`;
+}
+
+function generateSchemaSmokeTestFile(): string {
+  return `import { describe, expect, it } from 'vitest';
+import { ErrorSeveritySchema } from '../schemas.js';
+
+describe('generated schemas', () => {
+  it('round-trips a valid value through JSON', () => {
+    const value = ErrorSeveritySchema.parse('error');
+    const roundTripped = ErrorSeveritySchema.parse(JSON.parse(JSON.stringify(value)));
+
+    expect(roundTripped).toBe(value);
+  });
+});
+`;
 }
 
 function generateValidationFile(_schemas: SchemaDefinition[]): string {
