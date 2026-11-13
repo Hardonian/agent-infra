@@ -1,6 +1,6 @@
 {
   "schema": "hx370.node-profile/v1",
-  "observed_at": "2026-11-13T02:41:09Z",
+  "observed_at": "2026-11-13T14:33:16Z",
   "node_identity": {
     "enrollment_id": "hx370-dev-01",
     "hostname": "HX370",
@@ -21,15 +21,15 @@
   },
   "memory": {
     "total_gb_visible": 19.5,
-    "available_kb": 14836328,
-    "swap_total_kb": 18628428,
+    "available_kb": 14842332,
+    "swap_total_kb": 18628420,
     "note": "WSL-visible; integrated GPU shares system memory (not independent)"
   },
   "storage": {
     "repo_mount": "/home/scott",
     "repo_fs_type": "ext4",
     "repo_fs_size": "1007G",
-    "repo_fs_avail": "779G",
+    "repo_fs_avail": "775G",
     "fs_gate": "pass",
     "fs_gate_evidence": "write+fsync+readback+delete round-trip OK on ext4 at /home/scott"
   },
@@ -48,15 +48,15 @@
     "cargo": true, "powershell_interop": true
   },
   "resource_policy": {
-    "load1": 0.21,
+    "load1": 0.65,
     "build_workers": 2,
     "mem_headroom_gb": 15.5,
     "on_battery": "unknown",
     "note": "conservative; increase only after measuring a known workload"
   },
   "routing": {
-    "remote_epyc": "reachable",
-    "remote_ssh_port_22": "open",
+    "remote_epyc": "unreachable",
+    "remote_ssh_port_22": "closed",
     "remote_app_port_probe": "none",
     "remote_app_port_status": "not-probed",
     "remote_host_role": "sustained inference / always-on shared services (verify, do not assume)",
@@ -68,6 +68,6 @@
     "fs_gate": "pass",
     "gpu_compute": "untested",
     "npu_compute": "untested",
-    "remote_routing": "reachable"
+    "remote_routing": "unreachable"
   }
 }
