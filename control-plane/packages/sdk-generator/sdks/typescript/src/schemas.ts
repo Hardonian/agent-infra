@@ -697,7 +697,7 @@ export const RunnerCapabilitySchema = z.object({
       memory: z.string().optional(),
       gpu: z.boolean().default(false),
     })
-    .default({}),
+    .prefault({}),
 });
 
 /**
@@ -736,7 +736,7 @@ export const RunnerMetadataSchema = z.object({
           memory: z.string().optional(),
           gpu: z.boolean().default(false),
         })
-        .default({}),
+        .prefault({}),
     })
   ),
   supportedContracts: z.array(z.string()),
@@ -782,7 +782,7 @@ export const RunnerRegistrationRequestSchema = z.object({
           memory: z.string().optional(),
           gpu: z.boolean().default(false),
         })
-        .default({}),
+        .prefault({}),
     })
   ),
   healthCheckEndpoint: z.string().url(),
@@ -866,7 +866,7 @@ export const ModuleManifestSchema = z.object({
           memory: z.string().optional(),
           gpu: z.boolean().default(false),
         })
-        .default({}),
+        .prefault({}),
     })
   ),
   dependencies: z.array(z.string()).default([]),
@@ -1021,7 +1021,7 @@ export const TruthQuerySchema = z.object({
       before: z.string().datetime().optional(),
       after: z.string().datetime().optional(),
     })
-    .default({}),
+    .prefault({}),
   limit: z.number().int().default(100),
   offset: z.number().int().min(0).default(0),
 });
@@ -1091,7 +1091,7 @@ export const TruthSubscriptionSchema = z.object({
     .object({
       minConfidence: z.number().min(0).max(1).default(0),
     })
-    .default({}),
+    .prefault({}),
   webhookUrl: z.string().url().optional(),
   createdAt: z.string().datetime(),
 });
@@ -1470,7 +1470,7 @@ export const CapabilityRegistrySchema = z.object({
                 memory: z.string().optional(),
                 gpu: z.boolean().default(false),
               })
-              .default({}),
+              .prefault({}),
           })
         ),
         supportedContracts: z.array(z.string()),
@@ -1514,7 +1514,7 @@ export const CapabilityRegistrySchema = z.object({
               memory: z.string().optional(),
               gpu: z.boolean().default(false),
             })
-            .default({}),
+            .prefault({}),
         })
       ),
     })
@@ -1594,7 +1594,7 @@ export const RegisteredRunnerSchema = z.object({
             memory: z.string().optional(),
             gpu: z.boolean().default(false),
           })
-          .default({}),
+          .prefault({}),
       })
     ),
     supportedContracts: z.array(z.string()),
@@ -1638,7 +1638,7 @@ export const RegisteredRunnerSchema = z.object({
           memory: z.string().optional(),
           gpu: z.boolean().default(false),
         })
-        .default({}),
+        .prefault({}),
     })
   ),
 });
@@ -1796,7 +1796,8 @@ export const RegistryDiffSchema = z.object({
     z.object({
       type: z.enum(['runner', 'connector', 'capability']),
       id: z.string(),
-      changes: z.record(z.string(), 
+      changes: z.record(
+        z.string(),
         z.object({
           old: z.unknown(),
           new: z.unknown(),
@@ -1870,7 +1871,7 @@ export const MarketplaceIndexSchema = z.object({
                 memory: z.string().optional(),
                 gpu: z.boolean().default(false),
               })
-              .default({}),
+              .prefault({}),
           })
         ),
         supportedContracts: z.array(z.string()),
@@ -1911,7 +1912,7 @@ export const MarketplaceIndexSchema = z.object({
           changelog: z.string().url().optional(),
           examples: z.array(z.string().url()).default([]),
         })
-        .default({}),
+        .prefault({}),
       license: z.string(),
       keywords: z.array(z.string()).default([]),
       capabilities: z.array(
@@ -1931,7 +1932,7 @@ export const MarketplaceIndexSchema = z.object({
               memory: z.string().optional(),
               gpu: z.boolean().default(false),
             })
-            .default({}),
+            .prefault({}),
         })
       ),
       compatibility: z.object({
@@ -2019,7 +2020,7 @@ export const MarketplaceIndexSchema = z.object({
               .default([]),
             scanDurationMs: z.number().min(0).optional(),
           })
-          .default({}),
+          .prefault({}),
         codeQualityScore: z.number().min(0).max(100).optional(),
         maintainerReputation: z
           .enum(['official', 'verified', 'community', 'unknown'])
@@ -2030,7 +2031,7 @@ export const MarketplaceIndexSchema = z.object({
             average: z.number().min(0).max(5).optional(),
             count: z.number().min(0).default(0),
           })
-          .default({}),
+          .prefault({}),
       }),
       deprecation: z
         .object({
@@ -2109,7 +2110,7 @@ export const MarketplaceIndexSchema = z.object({
           configuration: z.string().url().optional(),
           examples: z.array(z.string().url()).default([]),
         })
-        .default({}),
+        .prefault({}),
       license: z.string(),
       keywords: z.array(z.string()).default([]),
       inputSchema: z.record(z.string(), z.unknown()),
@@ -2199,7 +2200,7 @@ export const MarketplaceIndexSchema = z.object({
               .default([]),
             scanDurationMs: z.number().min(0).optional(),
           })
-          .default({}),
+          .prefault({}),
         codeQualityScore: z.number().min(0).max(100).optional(),
         maintainerReputation: z
           .enum(['official', 'verified', 'community', 'unknown'])
@@ -2210,7 +2211,7 @@ export const MarketplaceIndexSchema = z.object({
             average: z.number().min(0).max(5).optional(),
             count: z.number().min(0).default(0),
           })
-          .default({}),
+          .prefault({}),
       }),
       deprecation: z
         .object({
@@ -2290,7 +2291,7 @@ export const MarketplaceRunnerSchema = z.object({
             memory: z.string().optional(),
             gpu: z.boolean().default(false),
           })
-          .default({}),
+          .prefault({}),
       })
     ),
     supportedContracts: z.array(z.string()),
@@ -2331,7 +2332,7 @@ export const MarketplaceRunnerSchema = z.object({
       changelog: z.string().url().optional(),
       examples: z.array(z.string().url()).default([]),
     })
-    .default({}),
+    .prefault({}),
   license: z.string(),
   keywords: z.array(z.string()).default([]),
   capabilities: z.array(
@@ -2351,7 +2352,7 @@ export const MarketplaceRunnerSchema = z.object({
           memory: z.string().optional(),
           gpu: z.boolean().default(false),
         })
-        .default({}),
+        .prefault({}),
     })
   ),
   compatibility: z.object({
@@ -2439,7 +2440,7 @@ export const MarketplaceRunnerSchema = z.object({
           .default([]),
         scanDurationMs: z.number().min(0).optional(),
       })
-      .default({}),
+      .prefault({}),
     codeQualityScore: z.number().min(0).max(100).optional(),
     maintainerReputation: z
       .enum(['official', 'verified', 'community', 'unknown'])
@@ -2450,7 +2451,7 @@ export const MarketplaceRunnerSchema = z.object({
         average: z.number().min(0).max(5).optional(),
         count: z.number().min(0).default(0),
       })
-      .default({}),
+      .prefault({}),
   }),
   deprecation: z
     .object({
@@ -2537,7 +2538,7 @@ export const MarketplaceConnectorSchema = z.object({
       configuration: z.string().url().optional(),
       examples: z.array(z.string().url()).default([]),
     })
-    .default({}),
+    .prefault({}),
   license: z.string(),
   keywords: z.array(z.string()).default([]),
   inputSchema: z.record(z.string(), z.unknown()),
@@ -2627,7 +2628,7 @@ export const MarketplaceConnectorSchema = z.object({
           .default([]),
         scanDurationMs: z.number().min(0).optional(),
       })
-      .default({}),
+      .prefault({}),
     codeQualityScore: z.number().min(0).max(100).optional(),
     maintainerReputation: z
       .enum(['official', 'verified', 'community', 'unknown'])
@@ -2638,7 +2639,7 @@ export const MarketplaceConnectorSchema = z.object({
         average: z.number().min(0).max(5).optional(),
         count: z.number().min(0).default(0),
       })
-      .default({}),
+      .prefault({}),
   }),
   deprecation: z
     .object({
@@ -2773,7 +2774,7 @@ export const MarketplaceQueryResultSchema = z.object({
                   memory: z.string().optional(),
                   gpu: z.boolean().default(false),
                 })
-                .default({}),
+                .prefault({}),
             })
           ),
           supportedContracts: z.array(z.string()),
@@ -2814,7 +2815,7 @@ export const MarketplaceQueryResultSchema = z.object({
             changelog: z.string().url().optional(),
             examples: z.array(z.string().url()).default([]),
           })
-          .default({}),
+          .prefault({}),
         license: z.string(),
         keywords: z.array(z.string()).default([]),
         capabilities: z.array(
@@ -2834,7 +2835,7 @@ export const MarketplaceQueryResultSchema = z.object({
                 memory: z.string().optional(),
                 gpu: z.boolean().default(false),
               })
-              .default({}),
+              .prefault({}),
           })
         ),
         compatibility: z.object({
@@ -2922,7 +2923,7 @@ export const MarketplaceQueryResultSchema = z.object({
                 .default([]),
               scanDurationMs: z.number().min(0).optional(),
             })
-            .default({}),
+            .prefault({}),
           codeQualityScore: z.number().min(0).max(100).optional(),
           maintainerReputation: z
             .enum(['official', 'verified', 'community', 'unknown'])
@@ -2933,7 +2934,7 @@ export const MarketplaceQueryResultSchema = z.object({
               average: z.number().min(0).max(5).optional(),
               count: z.number().min(0).default(0),
             })
-            .default({}),
+            .prefault({}),
         }),
         deprecation: z
           .object({
@@ -3010,7 +3011,7 @@ export const MarketplaceQueryResultSchema = z.object({
             configuration: z.string().url().optional(),
             examples: z.array(z.string().url()).default([]),
           })
-          .default({}),
+          .prefault({}),
         license: z.string(),
         keywords: z.array(z.string()).default([]),
         inputSchema: z.record(z.string(), z.unknown()),
@@ -3100,7 +3101,7 @@ export const MarketplaceQueryResultSchema = z.object({
                 .default([]),
               scanDurationMs: z.number().min(0).optional(),
             })
-            .default({}),
+            .prefault({}),
           codeQualityScore: z.number().min(0).max(100).optional(),
           maintainerReputation: z
             .enum(['official', 'verified', 'community', 'unknown'])
@@ -3111,7 +3112,7 @@ export const MarketplaceQueryResultSchema = z.object({
               average: z.number().min(0).max(5).optional(),
               count: z.number().min(0).default(0),
             })
-            .default({}),
+            .prefault({}),
         }),
         deprecation: z
           .object({
@@ -3189,7 +3190,7 @@ export const MarketplaceTrustSignalsSchema = z.object({
         .default([]),
       scanDurationMs: z.number().min(0).optional(),
     })
-    .default({}),
+    .prefault({}),
   codeQualityScore: z.number().min(0).max(100).optional(),
   maintainerReputation: z.enum(['official', 'verified', 'community', 'unknown']).default('unknown'),
   downloadCount: z.number().min(0).default(0),
@@ -3198,7 +3199,7 @@ export const MarketplaceTrustSignalsSchema = z.object({
       average: z.number().min(0).max(5).optional(),
       count: z.number().min(0).default(0),
     })
-    .default({}),
+    .prefault({}),
 });
 
 /**

@@ -9,7 +9,7 @@ import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { resolve } from 'path';
 
-const SDKS_DIR = resolve(process.cwd(), 'sdks');
+const SDKS_DIR = resolve(process.cwd(), 'packages/sdk-generator/sdks');
 const LANGUAGES = ['typescript', 'python', 'go'];
 
 console.log('🔍 Checking SDK drift...\n');
@@ -55,9 +55,16 @@ if (hasDrift) {
 function getExpectedFiles(lang) {
   switch (lang) {
     case 'typescript':
-      return ['src/types.ts', 'src/client.ts', 'src/index.ts', 'package.json'];
+      return [
+        'src/types.ts',
+        'src/client.ts',
+        'src/index.ts',
+        'src/tests/schemas.test.ts',
+        'tsconfig.json',
+        'package.json',
+      ];
     case 'python':
-      return ['controlplane_sdk/__init__.py', 'controlplane_sdk/types.py', 'pyproject.toml'];
+      return ['controlplane_sdk/__init__.py', 'controlplane_sdk/models.py', 'pyproject.toml'];
     case 'go':
       return ['types.go', 'client.go', 'go.mod'];
     default:
