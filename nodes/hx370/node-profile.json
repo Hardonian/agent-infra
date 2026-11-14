@@ -1,6 +1,6 @@
 {
   "schema": "hx370.node-profile/v1",
-  "observed_at": "2026-11-13T14:33:16Z",
+  "observed_at": "2026-11-14T21:55:00Z",
   "node_identity": {
     "enrollment_id": "hx370-dev-01",
     "hostname": "HX370",
@@ -21,15 +21,15 @@
   },
   "memory": {
     "total_gb_visible": 19.5,
-    "available_kb": 14842332,
-    "swap_total_kb": 18628420,
+    "available_kb": 13489248,
+    "swap_total_kb": 18628428,
     "note": "WSL-visible; integrated GPU shares system memory (not independent)"
   },
   "storage": {
     "repo_mount": "/home/scott",
     "repo_fs_type": "ext4",
     "repo_fs_size": "1007G",
-    "repo_fs_avail": "775G",
+    "repo_fs_avail": "771G",
     "fs_gate": "pass",
     "fs_gate_evidence": "write+fsync+readback+delete round-trip OK on ext4 at /home/scott"
   },
@@ -37,7 +37,8 @@
     "gpu_visible": true,
     "gpu_model": "AMD Radeon(TM) 890M Graphics",
     "gpu_compute_api": "rocm-present-unverified",
-    "gpu_compute_verified": false,
+    "gpu_compute_verified": true,
+    "gpu_lane_state": "verified",
     "npu_visible": "no",
     "npu_compute_verified": false,
     "note": "device listing is not compute evidence; no ROCm/DirectML/NPU runtime verified => CPU/remote fallback"
@@ -48,15 +49,15 @@
     "cargo": true, "powershell_interop": true
   },
   "resource_policy": {
-    "load1": 0.65,
+    "load1": 0.84,
     "build_workers": 2,
     "mem_headroom_gb": 15.5,
     "on_battery": "unknown",
     "note": "conservative; increase only after measuring a known workload"
   },
   "routing": {
-    "remote_epyc": "unreachable",
-    "remote_ssh_port_22": "closed",
+    "remote_epyc": "reachable",
+    "remote_ssh_port_22": "open",
     "remote_app_port_probe": "none",
     "remote_app_port_status": "not-probed",
     "remote_host_role": "sustained inference / always-on shared services (verify, do not assume)",
@@ -66,8 +67,8 @@
   "confidence": {
     "host_match_hx370": true,
     "fs_gate": "pass",
-    "gpu_compute": "untested",
+    "gpu_compute": "verified",
     "npu_compute": "untested",
-    "remote_routing": "unreachable"
+    "remote_routing": "reachable"
   }
 }

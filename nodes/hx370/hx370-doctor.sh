@@ -120,6 +120,11 @@ else
     fi
   done
 fi
+GPU_LANE_STATE="down"
+if curl -sf --max-time 3 http://127.0.0.1:8090/health >/dev/null 2>&1 \
+   && curl -sf --max-time 3 http://127.0.0.1:8090/v1/models 2>/dev/null | grep -q qwen3-8b; then
+  GPU_LANE_STATE="verified"
+fi
 NPU_VISIBLE="no"
 ls /dev/accel* >/dev/null 2>&1 && NPU_VISIBLE="yes"
 lsmod 2>/dev/null | grep -qiE 'xdna|amdxdna' && NPU_VISIBLE="module"
@@ -213,7 +218,8 @@ read -r -d '' PROFILE_JSON <<JSONEOF || true
     "gpu_visible": $([[ "$GPU_VISIBLE" == "yes" ]] && echo true || echo false),
     "gpu_model": "${GPU_MODEL:-unknown}",
     "gpu_compute_api": "${GPU_COMPUTE_API}",
-    "gpu_compute_verified": false,
+    "gpu_compute_verified": $([[ "$GPU_LANE_STATE" == verified ]] && echo true || echo false),
+    "gpu_lane_state": "${GPU_LANE_STATE}",
     "npu_visible": "${NPU_VISIBLE}",
     "npu_compute_verified": false,
     "note": "device listing is not compute evidence; no ROCm/DirectML/NPU runtime verified => CPU/remote fallback"
@@ -242,7 +248,7 @@ read -r -d '' PROFILE_JSON <<JSONEOF || true
   "confidence": {
     "host_match_hx370": $([[ $MATCH -eq 1 ]] && echo true || echo false),
     "fs_gate": "${FS_GATE_STATUS}",
-    "gpu_compute": "untested",
+    "gpu_compute": "${GPU_LANE_STATE}",
     "npu_compute": "untested",
     "remote_routing": "${REMOTE_STATUS}"
   }
@@ -257,7 +263,7 @@ summary() {
   printf '  memory         : %s GB visible, avail %s kB, swap %s kB\n' "${MEM_TOTAL_GB:-?}" "${MEM_AVAIL_KB:-?}" "${SWAP_TOTAL_KB:-?}"
   printf '  repo mount     : %s (%s, %s free) fs_gate=%s\n' "$REPO_MOUNT" "${REPO_FS_TYPE:-?}" "${REPO_FS_AVAIL:-?}" "$FS_GATE_STATUS"
   printf '  fs gate        : %s — %s\n' "$FS_GATE_STATUS" "$FS_GATE_EVIDENCE"
-  printf '  gpu            : visible=%s (%s) compute=%s (verified=no)\n' "$GPU_VISIBLE" "${GPU_MODEL:-?}" "$GPU_COMPUTE_API"
+  printf '  gpu            : visible=%s (%s) compute=%s lane=%s\n' "$GPU_VISIBLE" "${GPU_MODEL:-?}" "$GPU_COMPUTE_API" "$GPU_LANE_STATE"
   printf '  npu            : %s (verified=no)\n' "$NPU_VISIBLE"
   printf '  resource policy: build_workers=%s mem_headroom=%sGB load1=%s battery=%s\n' "$BUILD_WORKERS" "$MEM_HEADROOM_GB" "${LOAD1:-?}" "${ON_BATTERY}"
   printf '  remote epyc    : %s (ssh22=%s app:%s=%s, probe timeout %ss)\n' "$REMOTE_STATUS" "$REMOTE_SSH_PORT" "${REMOTE_PROBE_PORT:-probe}" "$REMOTE_APP_PORT" "$PROBE_TIMEOUT"

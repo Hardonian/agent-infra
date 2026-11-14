@@ -31,8 +31,9 @@ Rollback of anything this node changed: see §8.
 
 ## 2. Node capabilities (summary)
 Local, capability-proven: repo implementation (worktrees, bounded builds/tests), local browser/UI
-checks, lightweight research, credential-brokered tool calls. Not supported locally: GPU/NPU
-acceleration (untested — CPU/remote only), always-on schedules, canonical shared memory.
+checks, lightweight research, credential-brokered tool calls, and **local GPU inference** (llama.cpp
+HIP lane, `qwen3-8b` on :8090 — skill `rocm-wsl-llamacpp-lane`). Not supported locally: GPU *training*
+/ torch / DirectML / NPU (route to EPYC), always-on schedules, canonical shared memory.
 Full list + evidence: [`HX370.md`](HX370.md).
 
 ## 3. Local vs remote work selection
